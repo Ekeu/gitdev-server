@@ -1,0 +1,36 @@
+# .editorconfig
+
+# top-most EditorConfig file
+root = true
+
+# Default settings:
+[*]
+# Set default character set
+charset = utf-8
+# Use Unix-style line endings
+end_of_line = lf
+# No trailing whitespace at the end of lines
+trim_trailing_whitespace = true
+# Ensures an empty line at the end of the file
+insert_final_newline = true
+# Use 2 spaces for indentation
+indent_style = space
+indent_size = 2
+
+# Use single quotes
+[*.{js,ts}]
+quote_type = single
+
+# Markdown files can have trailing whitespace in some cases (for line breaks)
+[*.md]
+trim_trailing_whitespace = false
+
+# YAML files generally use spaces for indentation
+[*.yml]
+indent_style = space
+indent_size = 2
+
+# JSON files generally use 2 spaces for indentation
+[*.json]
+indent_style = space
+indent_size = 2
