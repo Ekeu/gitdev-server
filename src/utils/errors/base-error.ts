@@ -5,12 +5,15 @@ export class BaseError extends Error {
   public readonly httpCode: StatusCodes;
   public readonly isOperational: boolean;
 
-  constructor(
-    name: string,
-    httpCode: StatusCodes,
-    message: string,
-    isOperational: boolean,
-  ) {
+  /**
+   * Base Error Constructor
+   * @param name - Error name
+   * @param httpCode - HTTP status code
+   * @param message - Error message
+   * @param isOperational - Is the error operational?
+   */
+
+  constructor(name: string, httpCode: StatusCodes, message: string, isOperational: boolean) {
     super(message);
     this.name = name;
     this.httpCode = httpCode;

@@ -1,5 +1,5 @@
 import { Response } from "express";
-import { logger } from "src/config/logger";
+import { logger } from "@config/logger";
 import { BaseError } from "./base-error";
 
 class ErrorHandler {
