@@ -26,6 +26,34 @@ export class AuthRoutes {
      */
     router.post("/auth/signout", AuthUserControllers.signOut);
 
+    /**
+     * @method GET
+     * @param {string} path - /auth/github
+     * @description - Makes a request to github for authentication
+     */
+    router.get("/auth/github", AuthUserControllers.socialAuth("github", ["user:email"]));
+
+    /**
+     * @method GET
+     * @param {string} path - /auth/github/callback
+     * @description - Endpoint for github to redirect to after authentication
+     */
+    router.get("/auth/github/callback", AuthUserControllers.socialAuthCallback("github"));
+
+    /**
+     * @method GET
+     * @param {string} path - /auth/google
+     * @description - Makes a request to google for authentication
+     */
+    router.get("/auth/google", AuthUserControllers.socialAuth("google", ["email", "profile"]));
+
+    /**
+     * @method GET
+     * @param {string} path - /auth/google/callback
+     * @description - Endpoint for google to redirect to after authentication
+     */
+    router.get("/auth/google/callback", AuthUserControllers.socialAuthCallback("google"));
+
     return router;
   }
 }

@@ -1,8 +1,11 @@
 import { ApiError } from "@utils/errors/api-error";
 import { StatusCodes } from "http-status-codes";
+import { generateFromEmail } from "unique-username-generator";
 import { IUserDocument } from "./interfaces";
 import { User } from "./data/models/user";
 import { ObjectId, Types } from "mongoose";
+import { ISocialAuthGithubProfile, ISocialAuthGoogleProfile } from "@components/auth/interfaces";
+import { initAndSave } from "@components/auth/utils/common";
 
 export class UserServices {
   static async createUser(data: IUserDocument): Promise<IUserDocument> {
@@ -49,6 +52,27 @@ export class UserServices {
       if (!user) return null;
       const data = await user.populate("authUser");
       return data;
+    } catch (error) {
+      const err = error as Error;
+      throw new ApiError(err.name, StatusCodes.BAD_REQUEST, err.message);
+    }
+  }
+
+  static async createSocialAccount(data: ISocialAuthGithubProfile | ISocialAuthGoogleProfile): Promise<IUserDocument> {
+    try {
+      const { userDoc, authDoc } = await initAndSave({
+        username:
+          (data as ISocialAuthGithubProfile).username ||
+          (data as ISocialAuthGoogleProfile).displayName ||
+          generateFromEmail(data._json.email),
+        email: data._json.email,
+        provider: data.provider,
+      });
+
+      return {
+        ...userDoc,
+        authUser: authDoc,
+      } as IUserDocument;
     } catch (error) {
       const err = error as Error;
       throw new ApiError(err.name, StatusCodes.BAD_REQUEST, err.message);

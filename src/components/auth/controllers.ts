@@ -1,6 +1,5 @@
 import { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import gravatar from "gravatar";
 import passport from "passport";
 import jwt from "jsonwebtoken";
 import _ from "lodash";
@@ -9,14 +8,9 @@ import crypto from "crypto";
 import { joiRequestValidator } from "@utils/decorators/joi-validation-decorator";
 import { signupSchema } from "./data/joi-schemes/signup";
 import { AuthUserServices } from "./services";
-import { GITDEV_AUTH_SIGNUP_JOB, GITDEV_ERRORS, GITDEV_SIGNIN_SUCCESSFUL, GITDEV_SIGNUP_SUCCESSFUL } from "./constants";
-import { generateRandomNumericUUID } from "@utils/common";
-import { userCache } from "@components/user/redis/cache/user";
-import { authMQ } from "./bullmq/auth-mq";
-import { initAuthUserDocument, initUserDocument } from "./utils/common";
+import { GITDEV_ERRORS, GITDEV_SIGNIN_SUCCESSFUL, GITDEV_SIGNUP_SUCCESSFUL } from "./constants";
+import { generateJwtPayload, initAndSave } from "./utils/common";
 import { IUserDocument } from "@components/user/interfaces";
-import { userMQ } from "@components/user/bullmq/user-mq";
-import { GITDEV_USER_SIGNUP_JOB } from "@components/user/constants";
 import { signinSchema } from "./data/joi-schemes/signin";
 import { IAuthUserDocument, IAuthUserTokenDocument, IJWTPayload } from "./interfaces";
 import { logger } from "@config/logger";
@@ -28,20 +22,7 @@ import { env } from "@/env";
 export class AuthUserControllers {
   @joiRequestValidator(signupSchema)
   static async signUp(req: Request, res: Response) {
-    const { email, password, username } = req.body;
-
-    const avatar = gravatar.url(email, { d: "retro" }, true);
-    const redisId = generateRandomNumericUUID();
-
-    const authDoc = initAuthUserDocument({ email, password, username, redisId });
-    const userDoc = initUserDocument(authDoc._id, avatar);
-
-    await userCache.save("users", `${userDoc._id}`, redisId, userDoc as IUserDocument);
-    await userCache.save("authusers", `${authDoc._id}`, redisId, _.omit(authDoc, ["password"]) as IAuthUserDocument);
-
-    authMQ.addJob(GITDEV_AUTH_SIGNUP_JOB, { value: authDoc });
-    userMQ.addJob(GITDEV_USER_SIGNUP_JOB, { value: userDoc });
-
+    const { authDoc } = await initAndSave(req.body);
     res.status(StatusCodes.CREATED).json({
       user: _.omit(authDoc, ["password"]),
       message: GITDEV_SIGNUP_SUCCESSFUL,
@@ -66,14 +47,7 @@ export class AuthUserControllers {
           });
         }
 
-        const jwtPayload = {
-          role: (user.authUser as IAuthUserDocument).role,
-          email: (user.authUser as IAuthUserDocument).email,
-          redisId: (user.authUser as IAuthUserDocument).redisId,
-          username: (user.authUser as IAuthUserDocument).username,
-          authUser: (user.authUser as IAuthUserDocument)._id.toString(),
-          userId: user._id.toString(),
-        };
+        const jwtPayload = generateJwtPayload(user);
 
         const accessToken = AuthToken.generateAccessToken(jwtPayload);
 
@@ -208,5 +182,48 @@ export class AuthUserControllers {
     res.clearCookie(refreshTokenCookieConfig.cookie.name, refreshTokenCookieConfig.cookie.options);
     res.clearCookie(accessTokenCookieConfig.cookie.name, accessTokenCookieConfig.cookie.options);
     res.status(StatusCodes.NO_CONTENT).end();
+  }
+
+  static socialAuth(provider: string, scope: string[]) {
+    return function (req: Request, res: Response, next: NextFunction) {
+      passport.authenticate(provider, { scope, session: false })(req, res, next);
+    };
+  }
+
+  static socialAuthCallback(provider: string) {
+    return async function (req: Request, res: Response, next: NextFunction) {
+      passport.authenticate(provider, (error: Error, user: IUserDocument) => {
+        if (error || !user) {
+          return res.status(StatusCodes.UNPROCESSABLE_ENTITY).json({
+            message: GITDEV_ERRORS.SIGNIN_FAILED.message,
+          });
+        }
+
+        req.login(user, { session: false }, async (error: Error) => {
+          if (error) {
+            logger.error(`[SignIn Error]: ${error.message}`, error);
+            return res.status(StatusCodes.UNPROCESSABLE_ENTITY).json({
+              message: GITDEV_ERRORS.SIGNIN_ERROR.message,
+            });
+          }
+
+          const jwtPayload = generateJwtPayload(user);
+
+          const accessToken = AuthToken.generateAccessToken(jwtPayload);
+
+          const refreshToken = await AuthToken.generateRefreshToken(
+            jwtPayload,
+            (user.authUser as IAuthUserDocument)._id,
+          );
+          res.cookie(refreshTokenCookieConfig.cookie.name, refreshToken, refreshTokenCookieConfig.cookie.options);
+          res.cookie(accessTokenCookieConfig.cookie.name, accessToken, accessTokenCookieConfig.cookie.options);
+
+          res.status(StatusCodes.OK).json({
+            user,
+            message: GITDEV_SIGNIN_SUCCESSFUL,
+          });
+        });
+      })(req, res, next);
+    };
   }
 }
