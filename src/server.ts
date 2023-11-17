@@ -1,11 +1,26 @@
-import { App } from "./app";
-import { env } from "./env";
-import { middlewares } from "./middleware";
+import { App } from "@/app";
+import { env } from "@/env";
+import { middlewares } from "@middlewares/index.ts";
+import { AuthRoutes } from "@components/auth/routes";
+import { UserRoutes } from "@components/user/routes";
+import { errorMiddlewares } from "@utils/errors/error-middlewares";
 
+// Validate environment variables
 env.validateEnvs();
 
-const app = new App(env.GITDEV_SERVER_PORT, middlewares);
+//Initializing the express app
+const app = new App(
+  env.GITDEV_SERVER_PORT,
+  middlewares,
+  [AuthRoutes.getRoutes(), UserRoutes.getRoutes()],
+  errorMiddlewares,
+);
 
+// Initialize cloudinary
+app.initCloudinary();
+
+// Connect to database
 app.connectToDatabase();
 
+// Listen to the server
 app.listen();

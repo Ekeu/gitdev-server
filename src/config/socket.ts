@@ -2,11 +2,9 @@ import { createAdapter } from "@socket.io/redis-adapter";
 import { Server as HTTPServer } from "http";
 import { createClient } from "redis";
 import { Server } from "socket.io";
-import { env } from "src/env";
+import { env } from "@/env";
 
-export const createSocketIOServer = async (
-  server: HTTPServer,
-): Promise<Server> => {
+export const createSocketIOServer = async (server: HTTPServer): Promise<Server> => {
   const io = new Server(server, {
     cors: {
       origin: env.GITDEV_CLIENT_URL,
@@ -23,3 +21,5 @@ export const createSocketIOServer = async (
 
   return io;
 };
+
+export const socketIOConnections = (_io: Server): void => {};
