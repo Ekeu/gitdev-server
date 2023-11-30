@@ -6,6 +6,7 @@ import { User } from "./data/models/user";
 import { ObjectId, Types } from "mongoose";
 import { ISocialAuthGithubProfile, ISocialAuthGoogleProfile } from "@components/auth/interfaces";
 import { initAndSave } from "@components/auth/utils/common";
+import { removeSpacesFromUsername } from "@utils/common";
 
 export class UserServices {
   static async createUser(data: IUserDocument): Promise<IUserDocument> {
@@ -62,8 +63,8 @@ export class UserServices {
     try {
       const { userDoc, authDoc } = await initAndSave({
         username:
-          (data as ISocialAuthGithubProfile).username ||
-          (data as ISocialAuthGoogleProfile).displayName ||
+          removeSpacesFromUsername((data as ISocialAuthGithubProfile).username) ||
+          removeSpacesFromUsername((data as ISocialAuthGoogleProfile).displayName) ||
           generateFromEmail(data._json.email),
         email: data._json.email,
         provider: data.provider,

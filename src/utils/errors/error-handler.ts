@@ -6,7 +6,9 @@ class ErrorHandler {
   public handleError(err: BaseError, res: Response): void {
     logger.warn("An operational error has occurred: ", err);
     res.status(err.httpCode).json({
+      name: err.name,
       message: err.message,
+      success: false,
     });
   }
 

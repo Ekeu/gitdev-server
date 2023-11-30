@@ -1,5 +1,4 @@
 import {
-  GITDEV_EMAIL_REGEX,
   GITDEV_ERRORS,
   GITDEV_PASSWORD_MAX_LENGTH,
   GITDEV_PASSWORD_MIN_LENGTH,
@@ -43,12 +42,12 @@ export const signupSchema: ObjectSchema = Joi.object({
       "string.min": "Let's beef up that password! Make sure it's at least 8 characters.",
       "string.max": "That's an epic password, but it's too long. Keep it under {#limit} characters.",
       "any.required": "A password is needed for security. Can't skip that!",
-      "string.pattern.base": "A strong password has uppercase & lowercase letters, numbers, and special characters.",
+      "string.pattern.base":
+        "Make sure it's at least 15 characters OR at least 8 characters including a number and a lowercase letter.",
     }),
   email: Joi.string()
     .email()
     .required()
-    .pattern(GITDEV_EMAIL_REGEX)
     .external(async (value: string, helpers) => {
       const emailExists = await AuthUserServices.findUserByEmail(value);
       if (emailExists) {
@@ -61,7 +60,7 @@ export const signupSchema: ObjectSchema = Joi.object({
     .messages({
       "string.base": "That doesn't look like an email address.",
       "string.empty": "We'd love to keep in touch. Please provide your email.",
-      "string.pattern.base": "That email seems a bit off. Can you check it?",
+      "string.email": "That email seems a bit off. Can you check it?",
       "any.required": "We'd love to keep in touch. Please provide your email.",
     }),
 });

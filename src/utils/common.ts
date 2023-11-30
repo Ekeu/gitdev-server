@@ -1,5 +1,3 @@
-import _ from "lodash";
-
 export const generateRandomNumericUUID = () => {
   let uuid = "";
   while (uuid.length < 16) {
@@ -7,8 +5,6 @@ export const generateRandomNumericUUID = () => {
   }
   return uuid;
 };
-
-export const toLowerCase = (str: string) => _.toLower(str);
 
 export const parseRedisData = (data: Record<string, string>): Record<string, any> => {
   const parsedData: Record<string, any> = {};
@@ -20,4 +16,14 @@ export const parseRedisData = (data: Record<string, string>): Record<string, any
     }
   }
   return parsedData;
+};
+
+export const removeSpacesFromUsername = (name: string): string => {
+  const username = name.replace(/\s/g, "").toLowerCase();
+  return username;
+};
+
+export const removeNonAlphaNumericCharacters = (str: string): string => {
+  const formattedStr = str.replace(/[^a-zA-Z0-9]/g, "");
+  return formattedStr;
 };

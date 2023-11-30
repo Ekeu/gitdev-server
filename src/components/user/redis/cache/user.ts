@@ -6,7 +6,7 @@ import { RedisClient } from "@config/redis/client";
 import { IAuthUserDocument } from "@components/auth/interfaces";
 import { parseRedisData } from "@utils/common";
 
-class UserCache extends RedisClient {
+export class UserCache extends RedisClient {
   constructor() {
     super("gitdev-user-cache");
   }

@@ -1,12 +1,12 @@
-import { GITDEV_EMAIL_REGEX, GITDEV_PASSWORD_REGEX } from "@components/auth/constants";
+import { GITDEV_PASSWORD_REGEX } from "@components/auth/constants";
 import Joi, { ObjectSchema } from "joi";
 
 export const emailSchema: ObjectSchema = Joi.object({
-  email: Joi.string().email().required().pattern(GITDEV_EMAIL_REGEX).messages({
-    "string.base": "Invalid email address.",
-    "string.empty": "Email is required.",
-    "string.pattern.base": "Invalid email format.",
-    "any.required": "Email is required.",
+  email: Joi.string().email().required().messages({
+    "string.base": "Please enter a valid email address.",
+    "string.empty": "Don't forget to enter your email address!",
+    "string.email": "Oops! That doesn't look like a valid email format.",
+    "any.required": "We need your email address to proceed.",
   }),
 });
 
@@ -16,12 +16,20 @@ export const passwordSchema: ObjectSchema = Joi.object({
     "string.empty": "Please enter a new password.",
     "any.required": "A new password is required.",
     "string.pattern.base":
-      "Your password should include uppercase & lowercase letters, numbers, and special characters.",
+      "Make sure it's at least 15 characters OR at least 8 characters including a number and a lowercase letter.",
   }),
-  confirm_password: Joi.string().required().valid(Joi.ref("password")).messages({
+  confirmPassword: Joi.string().required().valid(Joi.ref("password")).messages({
     "string.base": "Invalid confirmation password.",
     "string.empty": "Please confirm your password.",
     "any.required": "Password confirmation is required.",
     "any.only": "Passwords do not match.",
+  }),
+});
+
+export const resetTokenSchema: ObjectSchema = Joi.object({
+  resetToken: Joi.string().required().messages({
+    "string.base": "The reset token provided is invalid.",
+    "string.empty": "Please provide a reset token. This field cannot be empty.",
+    "any.required": "A reset token is required to proceed.",
   }),
 });

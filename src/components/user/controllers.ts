@@ -27,6 +27,7 @@ export class UserControllers {
     }
     res.status(StatusCodes.OK).json({
       message: "User profile fetched successfully",
+      success: true,
       user,
     });
   }

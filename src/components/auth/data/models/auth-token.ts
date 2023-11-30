@@ -20,7 +20,7 @@ const authTokenSchema = new Schema(
         },
       },
     ],
-    emailToken: {
+    emailSecret: {
       type: String,
       default: null,
     },
@@ -88,28 +88,8 @@ authTokenSchema.statics.generateResetPasswordToken = async function (authUser: O
 
   authUserToken.resetPasswordToken = resetPasswordTokenHash;
   authUserToken.resetPasswordTokenExpiresAt =
-    Date.now() + (parseInt(env.GITDEV_RESET_PASSWORD_JWT_SECRET_EXPIRES_MINS) || 10) * 60 * 1000;
+    Date.now() + (parseInt(env.GITDEV_RESET_PASSWORD_JWT_SECRET_EXPIRES_MINS) || 60) * 60 * 1000;
   await authUserToken.save();
-
-  return tokenString;
-};
-
-authTokenSchema.statics.generateEmailToken = async function (authUser: ObjectId): Promise<string> {
-  const { token, tokenSecret, tokenString } = generateToken();
-
-  const emailTokenHash = crypto.createHmac("sha256", tokenSecret).update(token).digest("hex");
-
-  const authUserToken = await this.findOne({ authUser });
-
-  if (!authUserToken) {
-    await this.create({
-      authUser,
-      emailToken: emailTokenHash,
-    });
-  } else {
-    authUserToken.emailToken = emailTokenHash;
-    await authUserToken.save();
-  }
 
   return tokenString;
 };

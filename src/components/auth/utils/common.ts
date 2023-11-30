@@ -14,7 +14,7 @@ import { userMQ } from "@components/user/bullmq/user-mq";
 import { GITDEV_AUTH_SIGNUP_JOB } from "../constants";
 import { GITDEV_USER_SIGNUP_JOB } from "@components/user/constants";
 
-interface IAuthAndUser {
+export interface IAuthAndUser {
   authDoc: IAuthUserDocument;
   userDoc: IUserDocument;
 }
