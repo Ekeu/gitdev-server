@@ -5,30 +5,40 @@ import passport from "passport";
 import { IUserDocument } from "@components/user/interfaces";
 import { IAuthUserDocument } from "../interfaces";
 import { accessTokenCookieConfig } from "@config/cookie";
+import { ApiError } from "@utils/errors/api-error";
 
 export class AuthMiddleware {
   static async isAuthtenticated(req: Request, res: Response, next: NextFunction) {
     const token = req.cookies[accessTokenCookieConfig.cookie.name];
 
     if (!token) {
-      return res.status(StatusCodes.UNAUTHORIZED).json({
-        name: GITDEV_ERRORS.UNAUTHENTICATED.name,
-        message: GITDEV_ERRORS.UNAUTHENTICATED.message,
-      });
+      return next(
+        new ApiError(
+          GITDEV_ERRORS.UNAUTHENTICATED.name,
+          StatusCodes.UNAUTHORIZED,
+          GITDEV_ERRORS.UNAUTHENTICATED.message,
+        ),
+      );
     }
 
     passport.authenticate("jwt", { session: false }, (err: Error, user: IUserDocument) => {
       if (err || !user) {
-        return res.status(StatusCodes.UNAUTHORIZED).json({
-          name: GITDEV_ERRORS.JWT_FAILED_OR_USER_NOT_FOUND.name,
-          message: GITDEV_ERRORS.JWT_FAILED_OR_USER_NOT_FOUND.message,
-        });
+        return next(
+          new ApiError(
+            GITDEV_ERRORS.UNAUTHENTICATED.name,
+            StatusCodes.UNAUTHORIZED,
+            GITDEV_ERRORS.UNAUTHENTICATED.message,
+          ),
+        );
       }
 
       req.currentUser = {
-        authUser: (user.authUser as IAuthUserDocument)._id.toString(),
-        userId: user._id.toString(),
         token,
+        userId: user._id.toString(),
+        email: (user.authUser as IAuthUserDocument).email,
+        isVerified: (user.authUser as IAuthUserDocument).emailVerified,
+        authUser: (user.authUser as IAuthUserDocument)._id.toString(),
+        username: (user.authUser as IAuthUserDocument).username,
       };
 
       next();

@@ -19,7 +19,8 @@ const authUserSchema = new Schema(
     },
     password: {
       type: String,
-      required: true,
+      required: false,
+      default: null,
     },
     emailVerified: {
       type: Boolean,
@@ -29,6 +30,11 @@ const authUserSchema = new Schema(
       type: String,
       enum: ["basic", "admin"],
       default: "basic",
+    },
+    provider: {
+      type: String,
+      enum: ["local", "google", "github"],
+      default: "local",
     },
     redisId: {
       type: String,
@@ -48,7 +54,9 @@ const authUserSchema = new Schema(
 authUserSchema.pre("save", async function (this: IAuthUserDocument, next) {
   if (!this.isModified("password")) return next();
   try {
-    this.password = await hash(this.password as string, env.GITDEV_AUTH_SALT_ROUNDS);
+    if (this.password) {
+      this.password = await hash(this.password as string, env.GITDEV_AUTH_SALT_ROUNDS);
+    }
     next();
   } catch (error) {
     next(error as CallbackError);

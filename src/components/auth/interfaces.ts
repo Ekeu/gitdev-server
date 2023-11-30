@@ -4,9 +4,10 @@ export interface IAuthUser {
   authUser: string;
   userId: string;
   token: string;
-  username?: string;
+  email: string;
+  username: string;
+  isVerified: boolean;
   redisId?: string;
-  iat?: number;
 }
 
 export interface IAuthUserDocument extends Document {
@@ -29,7 +30,7 @@ export interface IAuthUserTokenDocument extends Document {
   updatedAt: Date;
   authUser: ObjectId;
   refreshTokens: Array<Record<string, string>>;
-  emailToken: string;
+  emailSecret: string;
   resetPasswordToken: string;
   resetPasswordTokenExpiresAt: number;
 }
@@ -38,13 +39,15 @@ export interface IAuthUserTokenModel extends Model<IAuthUserTokenDocument> {
   generateRefreshToken: (payload: IJWTPayload, authUser: ObjectId) => Promise<string>;
   generateAccessToken: (payload: IJWTPayload) => string;
   generateEmailToken: () => Promise<string>;
+  generateResetPasswordToken: (authUser: ObjectId) => Promise<string>;
 }
 
 export interface ISignUp {
   email: string;
-  redisId: string;
+  provider?: string;
+  redisId?: string;
   username: string;
-  password: string;
+  password?: string;
 }
 
 export interface IAuthUserJob {
@@ -63,4 +66,20 @@ export interface IJWTPayload {
   redisId: string;
   username: string;
   authUser: string;
+}
+
+export interface ISocialAuthGithubProfile {
+  provider: string;
+  username: string;
+  _json: {
+    email: string;
+  };
+}
+
+export interface ISocialAuthGoogleProfile {
+  provider: string;
+  displayName: string;
+  _json: {
+    email: string;
+  };
 }
