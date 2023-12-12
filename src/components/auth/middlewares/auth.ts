@@ -36,9 +36,10 @@ export class AuthMiddleware {
         token,
         userId: user._id.toString(),
         email: (user.authUser as IAuthUserDocument).email,
+        redisId: (user.authUser as IAuthUserDocument).redisId,
+        username: (user.authUser as IAuthUserDocument).username,
         isVerified: (user.authUser as IAuthUserDocument).emailVerified,
         authUser: (user.authUser as IAuthUserDocument)._id.toString(),
-        username: (user.authUser as IAuthUserDocument).username,
       };
 
       next();

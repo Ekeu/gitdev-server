@@ -11,6 +11,7 @@ import { Document, ObjectId } from "mongoose";
  */
 
 export interface IUserDocument extends Document {
+  [key: string]: any;
   bio: string;
   avatar: string;
   website: string;
@@ -18,7 +19,7 @@ export interface IUserDocument extends Document {
   createdAt: Date;
   updatedAt: Date;
   location: string;
-  postCount: number;
+  postsCount: number;
   blocked: ObjectId[];
   blockedBy: ObjectId[];
   _id: string | ObjectId;
@@ -42,7 +43,6 @@ export interface INotification {
   reactions: boolean;
   comments: boolean;
 }
-
 export interface ISocial {
   name: string;
   url: string;

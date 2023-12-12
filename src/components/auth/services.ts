@@ -44,9 +44,20 @@ export class AuthUserServices {
       throw new ApiError(err.name, StatusCodes.BAD_REQUEST, err.message);
     }
   }
-  static async findUserById(id: ObjectId | string): Promise<IAuthUserDocument | null> {
+  static async findAuthUserById(id: ObjectId | string): Promise<IAuthUserDocument | null> {
     try {
       const user = await AuthUser.findById(id);
+      if (!user) return null;
+      return user;
+    } catch (error) {
+      const err = error as Error;
+      throw new ApiError(err.name, StatusCodes.BAD_REQUEST, err.message);
+    }
+  }
+
+  static async getSelectedFieldsById(id: ObjectId | string, fields: string[]): Promise<IAuthUserDocument | null> {
+    try {
+      const user = await AuthUser.findById(id).select(fields.join(" "));
       if (!user) return null;
       return user;
     } catch (error) {
@@ -63,4 +74,13 @@ export class AuthUserServices {
       throw new ApiError(err.name, StatusCodes.BAD_REQUEST, err.message);
     }
   }
+
+  static initAuthUserDocument = (data: ISignUp): IAuthUserDocument => {
+    const auth = new AuthUser({
+      ...data,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    return auth.toObject();
+  };
 }

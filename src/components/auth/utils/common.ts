@@ -1,11 +1,8 @@
-import { ObjectId } from "mongoose";
 import gravatar from "gravatar";
 
 import crypto from "crypto";
 import { IAuthUserDocument, ISignUp } from "../interfaces";
 import { IUserDocument } from "@components/user/interfaces";
-import { AuthUser } from "../data/models/auth-user";
-import { User } from "@components/user/data/models/user";
 import { generateRandomNumericUUID } from "@utils/common";
 import { userCache } from "@components/user/redis/cache/user";
 import _ from "lodash";
@@ -13,30 +10,13 @@ import { authMQ } from "../bullmq/auth-mq";
 import { userMQ } from "@components/user/bullmq/user-mq";
 import { GITDEV_AUTH_SIGNUP_JOB } from "../constants";
 import { GITDEV_USER_SIGNUP_JOB } from "@components/user/constants";
+import { AuthUserServices } from "../services";
+import { UserServices } from "@components/user/services";
 
 export interface IAuthAndUser {
   authDoc: IAuthUserDocument;
   userDoc: IUserDocument;
 }
-
-export const initAuthUserDocument = (data: ISignUp): IAuthUserDocument => {
-  const auth = new AuthUser({
-    ...data,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
-  return auth.toObject();
-};
-
-export const initUserDocument = (authUser: ObjectId, avatar: string): IUserDocument => {
-  const user = new User({
-    avatar,
-    authUser,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
-  return user.toObject();
-};
 
 export const generateToken = () => {
   const token = crypto.randomBytes(20).toString("base64url");
@@ -63,8 +43,8 @@ export const initAndSave = async (data: ISignUp): Promise<IAuthAndUser> => {
   const avatar = gravatar.url(email, { d: "retro" }, true);
   const redisId = generateRandomNumericUUID();
 
-  const authDoc = initAuthUserDocument({ ...data, redisId });
-  const userDoc = initUserDocument(authDoc._id, avatar);
+  const authDoc = AuthUserServices.initAuthUserDocument({ ...data, redisId });
+  const userDoc = UserServices.initUserDocument(authDoc._id, avatar);
 
   await userCache.save("users", `${userDoc._id}`, redisId, userDoc as IUserDocument);
   await userCache.save("authusers", `${authDoc._id}`, redisId, _.omit(authDoc, ["password"]) as IAuthUserDocument);

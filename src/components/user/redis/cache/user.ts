@@ -5,10 +5,11 @@ import { ApiError } from "@utils/errors/api-error";
 import { RedisClient } from "@config/redis/client";
 import { IAuthUserDocument } from "@components/auth/interfaces";
 import { parseRedisData } from "@utils/common";
+import { GITDEV_USER_CACHE } from "@components/user/constants";
 
 export class UserCache extends RedisClient {
   constructor() {
-    super("gitdev-user-cache");
+    super(GITDEV_USER_CACHE);
   }
 
   async save(collection: string, key: string, redisId: string, user: IUserDocument | IAuthUserDocument) {
@@ -26,7 +27,7 @@ export class UserCache extends RedisClient {
       });
       await multi.exec();
     } catch (error) {
-      logger.error(`Failed to save data to cache for key ${key}: ${(error as Error).message}`, error);
+      logger.error(`Failed to save user data to cache: ${(error as Error).message}`, error);
       throw new ApiError("RedisError");
     }
   }
@@ -36,7 +37,7 @@ export class UserCache extends RedisClient {
       if (!this.client.isOpen) {
         await this.client.connect();
       }
-      const data = await this.client.HGETALL(`${collection}:${key}`);
+      const data = (await this.client.HGETALL(`${collection}:${key}`)) as IUserDocument | IAuthUserDocument;
 
       const parsedData = _.isEmpty(data) ? null : parseRedisData(data);
 
@@ -48,7 +49,7 @@ export class UserCache extends RedisClient {
         updatedAt: new Date(parsedData.updatedAt),
       };
     } catch (error) {
-      logger.error(`Failed to get data from cache for key ${key}: ${(error as Error).message}`, error);
+      logger.error(`Error getting user data from cache: ${(error as Error).message}`, error);
       throw new ApiError("RedisError");
     }
   }

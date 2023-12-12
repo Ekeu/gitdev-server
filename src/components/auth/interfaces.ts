@@ -7,10 +7,11 @@ export interface IAuthUser {
   email: string;
   username: string;
   isVerified: boolean;
-  redisId?: string;
+  redisId: string;
 }
 
 export interface IAuthUserDocument extends Document {
+  [key: string]: any;
   role: string;
   email: string;
   createdAt: Date;
@@ -18,7 +19,7 @@ export interface IAuthUserDocument extends Document {
   redisId: string;
   username: string;
   emailVerified: boolean;
-  _id: ObjectId;
+  _id: string | ObjectId;
   hashPassword: (password: string) => Promise<string>;
   comparePassword: (password: string) => Promise<boolean>;
   password?: string;
@@ -36,10 +37,10 @@ export interface IAuthUserTokenDocument extends Document {
 }
 
 export interface IAuthUserTokenModel extends Model<IAuthUserTokenDocument> {
-  generateRefreshToken: (payload: IJWTPayload, authUser: ObjectId) => Promise<string>;
+  generateRefreshToken: (payload: IJWTPayload, authUser: string | ObjectId) => Promise<string>;
   generateAccessToken: (payload: IJWTPayload) => string;
   generateEmailToken: () => Promise<string>;
-  generateResetPasswordToken: (authUser: ObjectId) => Promise<string>;
+  generateResetPasswordToken: (authUser: string | ObjectId) => Promise<string>;
 }
 
 export interface ISignUp {

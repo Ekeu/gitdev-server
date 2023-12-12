@@ -4,6 +4,7 @@ import { middlewares } from "@middlewares/index.ts";
 import { AuthRoutes } from "@components/auth/routes";
 import { UserRoutes } from "@components/user/routes";
 import { errorMiddlewares } from "@utils/errors/error-middlewares";
+import { PostRoutes } from "@components/post/routes";
 
 // Validate environment variables
 env.validateEnvs();
@@ -12,7 +13,7 @@ env.validateEnvs();
 const app = new App(
   env.GITDEV_SERVER_PORT,
   middlewares,
-  [AuthRoutes.getRoutes(), UserRoutes.getRoutes()],
+  [AuthRoutes.getRoutes(), UserRoutes.getRoutes(), PostRoutes.getRoutes()],
   errorMiddlewares,
 );
 

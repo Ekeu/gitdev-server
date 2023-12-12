@@ -9,12 +9,14 @@ const authUserSchema = new Schema(
       type: String,
       required: true,
       unique: true,
+      index: true,
       lowercase: true,
     },
     username: {
       type: String,
       required: true,
       unique: true,
+      index: true,
       lowercase: true,
     },
     password: {

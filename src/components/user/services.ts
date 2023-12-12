@@ -52,6 +52,17 @@ export class UserServices {
       const user = await User.findOne({ authUser: id });
       if (!user) return null;
       const data = await user.populate("authUser");
+      return data as IUserDocument;
+    } catch (error) {
+      const err = error as Error;
+      throw new ApiError(err.name, StatusCodes.BAD_REQUEST, err.message);
+    }
+  }
+
+  static async getSelectedFieldsById(id: string, fields: string[]): Promise<IUserDocument | null> {
+    try {
+      const data = await User.findById(id).select(fields.join(" "));
+      if (!data) return null;
       return data;
     } catch (error) {
       const err = error as Error;
@@ -79,4 +90,14 @@ export class UserServices {
       throw new ApiError(err.name, StatusCodes.BAD_REQUEST, err.message);
     }
   }
+
+  static initUserDocument = (authUser: string | ObjectId, avatar: string): IUserDocument => {
+    const user = new User({
+      avatar,
+      authUser,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    return user.toObject();
+  };
 }

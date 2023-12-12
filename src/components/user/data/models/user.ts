@@ -24,7 +24,7 @@ const userSchema = new Schema(
       type: String,
       default: null,
     },
-    postCount: {
+    postsCount: {
       type: Number,
       default: 0,
     },

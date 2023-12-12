@@ -108,7 +108,7 @@ describe("Auth Controller [Password]", () => {
     });
     it("should throw an error if reet token exists but does not match the user", async () => {
       jest.spyOn(AuthToken, "findOne").mockResolvedValueOnce(mockAuthDoc);
-      jest.spyOn(AuthUserServices, "findUserById").mockResolvedValueOnce(null);
+      jest.spyOn(AuthUserServices, "findAuthUserById").mockResolvedValueOnce(null);
       await AuthUserControllers.resetPassword(req, res, next);
 
       expect(next).toHaveBeenCalled();
@@ -116,7 +116,9 @@ describe("Auth Controller [Password]", () => {
     });
     it("should send an email and json response", async () => {
       jest.spyOn(AuthToken, "findOne").mockResolvedValueOnce(mockAuthTokenDoc);
-      jest.spyOn(AuthUserServices, "findUserById").mockResolvedValueOnce(mockAuthDoc as unknown as IAuthUserDocument);
+      jest
+        .spyOn(AuthUserServices, "findAuthUserById")
+        .mockResolvedValueOnce(mockAuthDoc as unknown as IAuthUserDocument);
       jest.spyOn(emailMQ, "addJob");
       await AuthUserControllers.resetPassword(req, res, next);
 
