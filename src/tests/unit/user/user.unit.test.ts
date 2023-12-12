@@ -20,7 +20,7 @@ jest.mock("@components/user/redis/cache/user", () => {
   };
 });
 
-describe("User Controller [Me]", () => {
+describe("User Controller", () => {
   let req: httpMocks.MockRequest<any>, res: httpMocks.MockResponse<any>;
 
   beforeEach(() => {
@@ -44,7 +44,7 @@ describe("User Controller [Me]", () => {
 
     expect(res._getStatusCode()).toBe(200);
     expect(res._getJSONData().success).toEqual(true);
-    expect(res._getJSONData().user).toEqual(null);
+    expect(res._getJSONData().data).toEqual(null);
   });
 
   it("should return user if found in cache or DB", async () => {

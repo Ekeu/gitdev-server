@@ -1,3 +1,9 @@
+import { IAuthUserDocument } from "@components/auth/interfaces";
+import { IPostDocument } from "@components/post/interfaces";
+import { IUserDocument } from "@components/user/interfaces";
+
+type TParsedData = IUserDocument | IPostDocument | IAuthUserDocument;
+
 export const generateRandomNumericUUID = () => {
   let uuid = "";
   while (uuid.length < 16) {
@@ -6,8 +12,8 @@ export const generateRandomNumericUUID = () => {
   return uuid;
 };
 
-export const parseRedisData = (data: Record<string, string>): Record<string, any> => {
-  const parsedData: Record<string, any> = {};
+export const parseRedisData = (data: TParsedData): TParsedData => {
+  const parsedData: TParsedData = {} as TParsedData;
   for (const key in data) {
     try {
       parsedData[key] = JSON.parse(data[key]);

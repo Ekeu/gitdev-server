@@ -73,7 +73,7 @@ export const GITDEV_ERRORS = {
   },
 };
 export const GITDEV_AUTH_QUEUE = "auth-mq";
-export const GITDEV_AUTH_SIGNUP_JOB = "auth-mq-signup";
+export const GITDEV_AUTH_SIGNUP_JOB = "job-mq-signup";
 export const GITDEV_SIGNUP_SUCCESSFUL = "Your account has been created successfully! Welcome to the community.";
 export const GITDEV_SIGNIN_SUCCESSFUL = "You're signed in! Great to have you back.";
 export const GITDEV_SIGNOUT_SUCCESSFUL = "You have been signed out successfully. We hope to see you again soon.";

@@ -1,0 +1,219 @@
+import { joiRequestValidator } from "@utils/decorators/joi-validation-decorator";
+import { Request, Response } from "express";
+import { imageRemoveTagSchema, imageUploadSchema, postSchema } from "./data/joi-schemes/post";
+import { PostServices } from "./services";
+import { postCache } from "./redis/cache/post";
+import { StatusCodes } from "http-status-codes";
+import { IOPost } from "./socket";
+import { AuthUserServices } from "@components/auth/services";
+import { UserServices } from "@components/user/services";
+import { postCreateMQ, postDeleteMQ, postUpdateMQ } from "./bullmq/post-mq";
+import {
+  GITDEV_CREATE_POST_JOB,
+  GITDEV_DELETE_POST_JOB,
+  GITDEV_IO_DELETE_POST,
+  GITDEV_IO_NEW_POST,
+  GITDEV_IO_UPDATE_POST,
+  GITDEV_POST_PAGE_SIZE,
+  GITDEV_UPDATE_POST_JOB,
+} from "./constants";
+import { deleteImagesByTag, removeTagFromImages, uploadImage } from "@helpers/cloudinary";
+import _ from "lodash";
+import { IPostDocument, IPostRange } from "./interfaces";
+
+export class PostControllers {
+  @joiRequestValidator(postSchema)
+  static async createPost(req: Request, res: Response) {
+    const postData = {
+      ...req.body,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      user: req.currentUser?.userId,
+      authUser: req.currentUser?.authUser,
+    };
+
+    const postDoc = PostServices.initPostDocument(postData);
+
+    const authUser = await AuthUserServices.getSelectedFieldsById(req.currentUser?.authUser as string, [
+      "username",
+      "_id",
+    ]);
+    const user = await UserServices.getSelectedFieldsById(req.currentUser?.userId as string, ["avatar", "_id"]);
+
+    const post = {
+      ...postDoc.toObject(),
+      authUser: {
+        username: authUser?.username,
+        _id: authUser?._id,
+      },
+      user: {
+        avatar: user?.avatar,
+        _id: user?._id,
+      },
+    };
+
+    IOPost.io.emit(GITDEV_IO_NEW_POST, post);
+
+    await postCache.save({
+      post,
+      key: postDoc._id.toString(),
+      userId: postDoc.user.toString(),
+      redisId: req.currentUser?.redisId as string,
+    });
+
+    postCreateMQ.addJob(GITDEV_CREATE_POST_JOB, { value: postDoc.toObject() });
+
+    return res.status(StatusCodes.CREATED).json({
+      success: true,
+      message: "Post created successfully",
+    });
+  }
+
+  @joiRequestValidator(imageUploadSchema)
+  static async uploadPostImage(req: Request, res: Response) {
+    const { img, options } = req.body;
+
+    const response = await uploadImage(img, {
+      ...options,
+      folder: "posts",
+      tags: [`draft=${req.currentUser?.authUser}`],
+    });
+
+    if (!response.public_id) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: "Image upload failed",
+        data: response,
+      });
+    }
+
+    return res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Image uploaded successfully",
+      data: {
+        url: response.secure_url,
+        public_id: response.public_id,
+      },
+    });
+  }
+
+  @joiRequestValidator(imageRemoveTagSchema)
+  static async removeTagFromPostImages(req: Request, res: Response) {
+    const { publicIds } = req.body;
+
+    const response = await removeTagFromImages(publicIds, `draft=${req.currentUser?.authUser}`);
+
+    if (response.public_ids && response.public_ids.length > 0) {
+      return res.status(StatusCodes.OK).json({
+        success: true,
+        message: "Tags removed successfully",
+      });
+    }
+
+    return res.status(StatusCodes.NOT_FOUND).json({
+      success: false,
+      message: "No images or tags found",
+      data: response,
+    });
+  }
+
+  static async deletePostDraftImagesByTag(req: Request, res: Response) {
+    const response = await deleteImagesByTag(`draft=${req.currentUser?.authUser}`);
+
+    if (response.deleted && _.values(response.deleted).includes("deleted")) {
+      return res.status(StatusCodes.OK).json({
+        success: true,
+        message: "Images deleted successfully",
+      });
+    }
+
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Images deletion failed",
+      data: response,
+    });
+  }
+
+  static async getPosts(req: Request, res: Response) {
+    const { page } = req.params;
+
+    const skip = (parseInt(page) - 1) * GITDEV_POST_PAGE_SIZE;
+    const limit = GITDEV_POST_PAGE_SIZE * parseInt(page);
+
+    const range: IPostRange = {
+      start: skip === 0 ? skip : skip + 1,
+      end: limit,
+    };
+
+    let posts: IPostDocument[] = [];
+    let total: number = 0;
+
+    const cachedPosts = await postCache.get(range);
+
+    if (cachedPosts?.length) {
+      posts = cachedPosts;
+      total = await postCache.count();
+    } else {
+      posts = await PostServices.getPosts({}, skip, limit, { createdAt: -1 });
+      total = await PostServices.countPosts();
+    }
+
+    return res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Posts fetched successfully",
+      data: {
+        posts,
+        total,
+      },
+    });
+  }
+
+  static async deletePost(req: Request, res: Response) {
+    const { postId } = req.params;
+
+    IOPost.io.emit(GITDEV_IO_DELETE_POST, { postId });
+
+    await postCache.delete(postId, req.currentUser?.userId as string);
+
+    postDeleteMQ.addJob(GITDEV_DELETE_POST_JOB, { postId, userId: req.currentUser?.userId });
+
+    return res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Post deleted successfully",
+    });
+  }
+
+  @joiRequestValidator(postSchema)
+  static async updatePost(req: Request, res: Response) {
+    const { postId } = req.params;
+
+    const updatedPost = await postCache.update(postId, req.body);
+
+    IOPost.io.emit(GITDEV_IO_UPDATE_POST, updatedPost);
+
+    postUpdateMQ.addJob(GITDEV_UPDATE_POST_JOB, { postId, value: updatedPost });
+
+    return res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Post updated successfully",
+    });
+  }
+
+  static async getPost(req: Request, res: Response) {
+    const { postId } = req.params;
+
+    let post: IPostDocument | null = null;
+
+    post = await postCache.getOne(postId);
+
+    if (!post) {
+      post = await PostServices.findPostById(postId);
+    }
+
+    return res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Post fetched successfully",
+      data: post,
+    });
+  }
+}

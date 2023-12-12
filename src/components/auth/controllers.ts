@@ -333,7 +333,7 @@ export class AuthUserControllers {
         );
       }
 
-      const authUser = await AuthUserServices.findUserById(authUserToken.authUser);
+      const authUser = await AuthUserServices.findAuthUserById(authUserToken.authUser);
 
       if (!authUser) {
         throw new ApiError(

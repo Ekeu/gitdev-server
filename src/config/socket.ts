@@ -3,12 +3,13 @@ import { Server as HTTPServer } from "http";
 import { createClient } from "redis";
 import { Server } from "socket.io";
 import { env } from "@/env";
+import { IOPost } from "@components/post/socket";
 
 export const createSocketIOServer = async (server: HTTPServer): Promise<Server> => {
   const io = new Server(server, {
     cors: {
       origin: env.GITDEV_CLIENT_URL,
-      methods: ["GET", "POST", "PUT", "DELETE", " "],
+      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     },
   });
 
@@ -22,4 +23,7 @@ export const createSocketIOServer = async (server: HTTPServer): Promise<Server> 
   return io;
 };
 
-export const socketIOConnections = (_io: Server): void => {};
+export const socketIOConnections = (io: Server): void => {
+  const iopost = new IOPost(io);
+  iopost.listen();
+};

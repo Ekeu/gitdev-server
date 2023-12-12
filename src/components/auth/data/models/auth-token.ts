@@ -11,6 +11,7 @@ const authTokenSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "AuthUser",
       required: true,
+      index: true,
     },
     refreshTokens: [
       {
@@ -53,7 +54,7 @@ authTokenSchema.statics.generateAccessToken = function (payload: IJWTPayload): s
 
 authTokenSchema.statics.generateRefreshToken = async function (
   payload: IJWTPayload,
-  authUser: ObjectId,
+  authUser: string | ObjectId,
 ): Promise<string> {
   const refreshToken = jwt.sign(payload, env.GITDEV_REFRESH_JWT_SECRET, {
     expiresIn: env.GITDEV_REFRESH_JWT_SECRET_EXPIRES_IN,
@@ -79,7 +80,7 @@ authTokenSchema.statics.generateRefreshToken = async function (
   return refreshToken;
 };
 
-authTokenSchema.statics.generateResetPasswordToken = async function (authUser: ObjectId): Promise<string> {
+authTokenSchema.statics.generateResetPasswordToken = async function (authUser: string | ObjectId): Promise<string> {
   const { token, tokenSecret, tokenString } = generateToken();
 
   const resetPasswordTokenHash = crypto.createHmac("sha256", tokenSecret).update(token).digest("hex");
