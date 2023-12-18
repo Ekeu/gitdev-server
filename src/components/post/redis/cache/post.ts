@@ -1,6 +1,5 @@
-import { IAuthUserDocument } from "@components/auth/interfaces";
+import { GITDEV_POST_CACHE } from "@components/post/constants";
 import { IPostCache, IPostDocument, IPostRange, IZRangeOptions, TMultiPost } from "@components/post/interfaces";
-import { IUserDocument } from "@components/user/interfaces";
 import { logger } from "@config/logger";
 import { RedisClient } from "@config/redis/client";
 import { parseRedisData } from "@utils/common";
@@ -9,7 +8,7 @@ import _ from "lodash";
 
 export class PostCache extends RedisClient {
   constructor() {
-    super("gitdev-post-cache");
+    super(GITDEV_POST_CACHE);
   }
 
   async save(data: IPostCache) {
@@ -144,8 +143,6 @@ export class PostCache extends RedisClient {
 
       return {
         ...parsedData,
-        user: (parsedData.user as IUserDocument)._id,
-        authUser: (parsedData.authUser as IAuthUserDocument)._id,
         createdAt: new Date(parsedData.createdAt),
         updatedAt: new Date(parsedData.updatedAt),
       } as IPostDocument;

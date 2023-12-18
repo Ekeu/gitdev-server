@@ -15,7 +15,6 @@ const mockPostDocMeta = {
   _id: faker.database.mongodbObjectId(),
   createdAt: faker.date.anytime(),
   updatedAt: faker.date.anytime(),
-  __v: 0,
 };
 
 const toObject = jest.fn(function (this: IPostDocument) {
@@ -52,9 +51,10 @@ export const mockPostAuth = {
   _id: faker.database.mongodbObjectId(),
 };
 
-export const mockPostUser = {
+export const mockAuthLookup = {
   avatar: faker.image.avatar(),
   _id: faker.database.mongodbObjectId(),
+  authUser: mockPostAuth,
 };
 
 export const mockPostEmittedData = {
@@ -64,12 +64,7 @@ export const mockPostEmittedData = {
   tags,
   privacy,
   ...mockPostDocMeta,
-  authUser: {
-    ...mockPostAuth,
-  },
-  user: {
-    ...mockPostUser,
-  },
+  user: mockAuthLookup,
   toObject,
 };
 
@@ -80,13 +75,15 @@ export const mockPostDoc = {
   tags,
   privacy,
   user,
-  authUser,
   ...mockPostDocMeta,
   toObject,
 };
 
 export const mockCachedPost = {
-  post: mockPostEmittedData,
+  post: {
+    ...mockPostEmittedData,
+    user,
+  },
   key: mockPostDoc._id,
   userId: mockPostDoc.user,
   redisId: redisId,

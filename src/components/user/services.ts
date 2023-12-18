@@ -70,6 +70,40 @@ export class UserServices {
     }
   }
 
+  static async getAuthLookUpData(
+    id: string,
+    authFields: string[],
+    userFields: string[],
+  ): Promise<IUserDocument | null> {
+    try {
+      const user = await User.aggregate([
+        { $match: { _id: new Types.ObjectId(id) } },
+        {
+          $lookup: {
+            from: "authusers",
+            localField: "authUser",
+            foreignField: "_id",
+            as: "authUser",
+            pipeline: [
+              {
+                $project: authFields.reduce((acc, field) => ({ ...acc, [field]: 1 }), {}),
+              },
+            ],
+          },
+        },
+        { $unwind: "$authUser" },
+        {
+          $project: userFields.reduce((acc, field) => ({ ...acc, [field]: 1 }), { authUser: 1 }),
+        },
+      ]);
+      if (!user.length) return null;
+      return user[0];
+    } catch (error) {
+      const err = error as Error;
+      throw new ApiError(err.name, StatusCodes.BAD_REQUEST, err.message);
+    }
+  }
+
   static async createSocialAccount(data: ISocialAuthGithubProfile | ISocialAuthGoogleProfile): Promise<IUserDocument> {
     try {
       const { userDoc, authDoc } = await initAndSave({

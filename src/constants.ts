@@ -8,3 +8,4 @@ export const GITDEV_ERRORS = {
     message: "An error occurred while sending the email",
   },
 };
+export const GITDEV_REDIS_CONNECTION_NAME = "gitdev-redis";

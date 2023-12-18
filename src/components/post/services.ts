@@ -5,6 +5,7 @@ import { StatusCodes } from "http-status-codes";
 import { User } from "@components/user/data/models/user";
 import { IPostQuery } from "@components/post/interfaces";
 import { Types } from "mongoose";
+import { getUserAuthLookup } from "@utils/common";
 
 export class PostServices {
   static initPostDocument(data: INewPost): IPostDocument {
@@ -36,40 +37,8 @@ export class PostServices {
         { $sort: sort },
         { $skip: skip },
         { $limit: limit },
-        {
-          $lookup: {
-            from: "users",
-            localField: "user",
-            foreignField: "_id",
-            as: "user",
-            pipeline: [
-              {
-                $project: {
-                  avatar: 1,
-                  _id: 1,
-                },
-              },
-            ],
-          },
-        },
+        getUserAuthLookup(),
         { $unwind: "$user" },
-        {
-          $lookup: {
-            from: "authusers",
-            localField: "authUser",
-            foreignField: "_id",
-            as: "authUser",
-            pipeline: [
-              {
-                $project: {
-                  username: 1,
-                  _id: 1,
-                },
-              },
-            ],
-          },
-        },
-        { $unwind: "$authUser" },
       ]);
       return posts;
     } catch (error) {
@@ -107,43 +76,10 @@ export class PostServices {
     try {
       const post = await Post.aggregate([
         { $match: { _id: new Types.ObjectId(id) } },
-        {
-          $lookup: {
-            from: "users",
-            localField: "user",
-            foreignField: "_id",
-            as: "user",
-            pipeline: [
-              {
-                $project: {
-                  avatar: 1,
-                  _id: 1,
-                },
-              },
-            ],
-          },
-        },
+        getUserAuthLookup(),
         { $unwind: "$user" },
-        {
-          $lookup: {
-            from: "authusers",
-            localField: "authUser",
-            foreignField: "_id",
-            as: "authUser",
-            pipeline: [
-              {
-                $project: {
-                  username: 1,
-                  _id: 1,
-                },
-              },
-            ],
-          },
-        },
-        { $unwind: "$authUser" },
       ]);
-
-      if (!post) return null;
+      if (!post.length) return null;
       return post[0];
     } catch (error) {
       const err = error as Error;

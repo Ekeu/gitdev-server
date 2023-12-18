@@ -1,18 +1,7 @@
-import { IAuthUserDocument } from "@components/auth/interfaces";
+import { IReactions } from "@components/reaction/interfaces";
 import { IUserDocument } from "@components/user/interfaces";
 import { RedisCommandRawReply } from "@redis/client/dist/lib/commands";
 import { Document, Types } from "mongoose";
-
-interface IReactions {
-  upvote: number;
-  downvote: number;
-  smile: number;
-  celebrate: number;
-  insightful: number;
-  love: number;
-  rocket: number;
-  eyes: number;
-}
 
 export interface INewPost {
   title: string;
@@ -21,7 +10,6 @@ export interface INewPost {
   tags: string[];
   privacy: string;
   user: string;
-  authUser: string;
 }
 
 export interface IPostCache {
@@ -44,7 +32,6 @@ export interface IPostDocument extends Document {
   commentsEnabled: boolean;
   _id: string | Types.ObjectId;
   user: string | Types.ObjectId | IUserDocument;
-  authUser: string | Types.ObjectId | IAuthUserDocument;
 }
 
 export interface IZRangeOptions {

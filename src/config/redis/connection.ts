@@ -1,9 +1,10 @@
 import { logger } from "@config/logger";
 import { RedisClient } from "./client";
+import { GITDEV_REDIS_CONNECTION_NAME } from "@/constants";
 
 class RedisConnection extends RedisClient {
   constructor() {
-    super("gitdev-redis-connection");
+    super(GITDEV_REDIS_CONNECTION_NAME);
   }
 
   async connect(): Promise<void> {

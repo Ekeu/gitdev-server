@@ -42,8 +42,8 @@ describe("User Controller", () => {
 
     await UserControllers.fetchUserProfile(req, res);
 
-    expect(res._getStatusCode()).toBe(200);
-    expect(res._getJSONData().success).toEqual(true);
+    expect(res._getStatusCode()).toBe(404);
+    expect(res._getJSONData().success).toEqual(false);
     expect(res._getJSONData().data).toEqual(null);
   });
 

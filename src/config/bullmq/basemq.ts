@@ -8,8 +8,9 @@ import { env } from "@/env";
 import { IUserJob } from "@components/user/interfaces";
 import { IEmailJob } from "@components/mail/interfaces";
 import { IPostJob } from "@components/post/interfaces";
+import { IReactionJob } from "@components/reaction/interfaces";
 
-type TJobData = IAuthUserJob | IUserJob | IEmailJob | IPostJob;
+type TJobData = IAuthUserJob | IUserJob | IEmailJob | IPostJob | IReactionJob;
 
 export abstract class BaseMQ {
   protected queue: Queue;
