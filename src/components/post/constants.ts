@@ -1,10 +1,11 @@
 export const GITDEV_POST_CREATE_QUEUE = "post-mq-create";
 export const GITDEV_POST_DELETE_QUEUE = "post-mq-delete";
 export const GITDEV_POST_UPDATE_QUEUE = "post-mq-update";
-export const GITDEV_CREATE_POST_JOB = "job-mq-create";
-export const GITDEV_DELETE_POST_JOB = "job-mq-delete";
-export const GITDEV_UPDATE_POST_JOB = "job-mq-update";
+export const GITDEV_CREATE_POST_JOB = "job-post-mq-create";
+export const GITDEV_DELETE_POST_JOB = "job-post-mq-delete";
+export const GITDEV_UPDATE_POST_JOB = "job-post-mq-update";
 export const GITDEV_POST_PAGE_SIZE = 10;
 export const GITDEV_IO_NEW_POST = "new-post";
 export const GITDEV_IO_DELETE_POST = "delete-post";
 export const GITDEV_IO_UPDATE_POST = "update-post";
+export const GITDEV_POST_CACHE = "gitdev-post-cache";

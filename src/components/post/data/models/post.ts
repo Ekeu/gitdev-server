@@ -66,12 +66,6 @@ const postSchema = new Schema(
       required: true,
       index: true,
     },
-    authUser: {
-      type: Schema.Types.ObjectId,
-      ref: "AuthUser",
-      required: true,
-      index: true,
-    },
   },
   {
     timestamps: true,

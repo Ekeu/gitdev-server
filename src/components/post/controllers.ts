@@ -5,9 +5,8 @@ import { PostServices } from "./services";
 import { postCache } from "./redis/cache/post";
 import { StatusCodes } from "http-status-codes";
 import { IOPost } from "./socket";
-import { AuthUserServices } from "@components/auth/services";
 import { UserServices } from "@components/user/services";
-import { postCreateMQ, postDeleteMQ, postUpdateMQ } from "./bullmq/post-mq";
+import { createPostMQ, deletePostMQ, updatedPostMQ } from "./bullmq/post-mq";
 import {
   GITDEV_CREATE_POST_JOB,
   GITDEV_DELETE_POST_JOB,
@@ -20,6 +19,7 @@ import {
 import { deleteImagesByTag, removeTagFromImages, uploadImage } from "@helpers/cloudinary";
 import _ from "lodash";
 import { IPostDocument, IPostRange } from "./interfaces";
+import { IUserDocument } from "@components/user/interfaces";
 
 export class PostControllers {
   @joiRequestValidator(postSchema)
@@ -29,39 +29,28 @@ export class PostControllers {
       createdAt: new Date(),
       updatedAt: new Date(),
       user: req.currentUser?.userId,
-      authUser: req.currentUser?.authUser,
     };
 
     const postDoc = PostServices.initPostDocument(postData);
 
-    const authUser = await AuthUserServices.getSelectedFieldsById(req.currentUser?.authUser as string, [
-      "username",
-      "_id",
-    ]);
-    const user = await UserServices.getSelectedFieldsById(req.currentUser?.userId as string, ["avatar", "_id"]);
+    const user = await UserServices.getAuthLookUpData(
+      req.currentUser?.userId as string,
+      ["username", "_id"],
+      ["avatar", "_id"],
+    );
 
-    const post = {
-      ...postDoc.toObject(),
-      authUser: {
-        username: authUser?.username,
-        _id: authUser?._id,
-      },
-      user: {
-        avatar: user?.avatar,
-        _id: user?._id,
-      },
-    };
+    const post = { ...postDoc.toObject(), user };
 
     IOPost.io.emit(GITDEV_IO_NEW_POST, post);
 
     await postCache.save({
-      post,
+      post: postDoc.toObject(),
       key: postDoc._id.toString(),
       userId: postDoc.user.toString(),
       redisId: req.currentUser?.redisId as string,
     });
 
-    postCreateMQ.addJob(GITDEV_CREATE_POST_JOB, { value: postDoc.toObject() });
+    createPostMQ.addJob(GITDEV_CREATE_POST_JOB, { value: postDoc.toObject() });
 
     return res.status(StatusCodes.CREATED).json({
       success: true,
@@ -153,6 +142,15 @@ export class PostControllers {
     if (cachedPosts?.length) {
       posts = cachedPosts;
       total = await postCache.count();
+
+      for (let index = 0; index < posts.length; index++) {
+        const user = await UserServices.getAuthLookUpData(
+          posts[index].user.toString(),
+          ["username", "_id"],
+          ["avatar", "_id"],
+        );
+        posts[index].user = user as IUserDocument;
+      }
     } else {
       posts = await PostServices.getPosts({}, skip, limit, { createdAt: -1 });
       total = await PostServices.countPosts();
@@ -175,7 +173,7 @@ export class PostControllers {
 
     await postCache.delete(postId, req.currentUser?.userId as string);
 
-    postDeleteMQ.addJob(GITDEV_DELETE_POST_JOB, { postId, userId: req.currentUser?.userId });
+    deletePostMQ.addJob(GITDEV_DELETE_POST_JOB, { postId, userId: req.currentUser?.userId });
 
     return res.status(StatusCodes.OK).json({
       success: true,
@@ -191,7 +189,7 @@ export class PostControllers {
 
     IOPost.io.emit(GITDEV_IO_UPDATE_POST, updatedPost);
 
-    postUpdateMQ.addJob(GITDEV_UPDATE_POST_JOB, { postId, value: updatedPost });
+    updatedPostMQ.addJob(GITDEV_UPDATE_POST_JOB, { postId, value: updatedPost });
 
     return res.status(StatusCodes.OK).json({
       success: true,
@@ -208,6 +206,14 @@ export class PostControllers {
 
     if (!post) {
       post = await PostServices.findPostById(postId);
+    }
+
+    if (!post) {
+      return res.status(StatusCodes.NOT_FOUND).json({
+        success: false,
+        message: "Post not found",
+        data: null,
+      });
     }
 
     return res.status(StatusCodes.OK).json({

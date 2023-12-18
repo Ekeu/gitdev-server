@@ -25,6 +25,15 @@ export class UserControllers {
     } else {
       user = await UserServices.findUserById(req.currentUser?.userId as string);
     }
+
+    if (!user) {
+      return res.status(StatusCodes.NOT_FOUND).json({
+        success: false,
+        message: "User not found",
+        data: null,
+      });
+    }
+
     res.status(StatusCodes.OK).json({
       message: "User profile fetched successfully",
       success: true,

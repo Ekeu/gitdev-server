@@ -1,8 +1,9 @@
 import { IAuthUserDocument } from "@components/auth/interfaces";
 import { IPostDocument } from "@components/post/interfaces";
+import { IReactionDocument } from "@components/reaction/interfaces";
 import { IUserDocument } from "@components/user/interfaces";
 
-type TParsedData = IUserDocument | IPostDocument | IAuthUserDocument;
+type TParsedData = IUserDocument | IPostDocument | IAuthUserDocument | IReactionDocument;
 
 export const generateRandomNumericUUID = () => {
   let uuid = "";
@@ -32,4 +33,46 @@ export const removeSpacesFromUsername = (name: string): string => {
 export const removeNonAlphaNumericCharacters = (str: string): string => {
   const formattedStr = str.replace(/[^a-zA-Z0-9]/g, "");
   return formattedStr;
+};
+
+export const getUserAuthLookup = () => {
+  return {
+    $lookup: {
+      from: "users",
+      localField: "user",
+      foreignField: "_id",
+      as: "user",
+      pipeline: [
+        {
+          $lookup: {
+            from: "authusers",
+            localField: "_id",
+            foreignField: "_id",
+            as: "authUser",
+          },
+        },
+        {
+          $project: {
+            avatar: 1,
+            _id: 1,
+            authUser: {
+              $arrayElemAt: [
+                {
+                  $map: {
+                    input: "$authUser",
+                    as: "au",
+                    in: {
+                      _id: "$$au._id",
+                      username: "$$au.username",
+                    },
+                  },
+                },
+                0,
+              ],
+            },
+          },
+        },
+      ],
+    },
+  };
 };
