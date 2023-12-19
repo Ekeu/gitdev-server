@@ -9,12 +9,13 @@ import { IUserJob } from "@components/user/interfaces";
 import { IEmailJob } from "@components/mail/interfaces";
 import { IPostJob } from "@components/post/interfaces";
 import { IReactionJob } from "@components/reaction/interfaces";
+import { IVoteComment } from "@components/comment/interfaces";
 
-type TJobData = IAuthUserJob | IUserJob | IEmailJob | IPostJob | IReactionJob;
+type TJobData = IAuthUserJob | IUserJob | IEmailJob | IPostJob | IReactionJob | IVoteComment;
 
 export abstract class BaseMQ {
   protected queue: Queue;
-  private worker: Worker | undefined;
+  worker: Worker | undefined;
   private queueEvents: QueueEvents;
   private static queues: BullMQAdapter[] = [];
   static router: any;
@@ -94,6 +95,10 @@ export abstract class BaseMQ {
         id: job?.id ?? "No ID",
         error,
       });
+    });
+
+    this.worker.on("error", (error) => {
+      logger.fatal("BullMQ encountered an error", error);
     });
   }
 }
