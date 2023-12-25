@@ -8,7 +8,7 @@ export class PostRoutes {
 
     /**
      * @method GET
-     * @param {string} path - /posts/:page
+     * @param {string} path - /posts/all/:page
      * @description - Gets all posts by page
      */
     router.get("/posts/all/:page", AuthMiddleware.isAuthtenticated, PostControllers.getPosts);

@@ -123,7 +123,7 @@ export class PostControllers {
     });
   }
 
-  static async getPosts(req: Request, res: Response) {
+  static async getPosts(req: Request, res: Response): Promise<void> {
     const { page } = req.params;
 
     const skip = (parseInt(page) - 1) * GITDEV_POST_PAGE_SIZE;
@@ -156,7 +156,7 @@ export class PostControllers {
       total = await PostServices.countPosts();
     }
 
-    return res.status(StatusCodes.OK).json({
+    res.status(StatusCodes.OK).json({
       success: true,
       message: "Posts fetched successfully",
       data: {

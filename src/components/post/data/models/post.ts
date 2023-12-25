@@ -18,10 +18,6 @@ const postSchema = new Schema(
       default: "public",
     },
     tags: [String],
-    commentsCount: {
-      type: Number,
-      default: 0,
-    },
     reactions: {
       upvote: {
         type: Number,

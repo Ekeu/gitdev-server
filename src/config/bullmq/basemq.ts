@@ -9,8 +9,9 @@ import { IUserJob } from "@components/user/interfaces";
 import { IEmailJob } from "@components/mail/interfaces";
 import { IPostJob } from "@components/post/interfaces";
 import { IReactionJob } from "@components/reaction/interfaces";
+import { IVoteComment } from "@components/comment/interfaces";
 
-type TJobData = IAuthUserJob | IUserJob | IEmailJob | IPostJob | IReactionJob;
+type TJobData = IAuthUserJob | IUserJob | IEmailJob | IPostJob | IReactionJob | IVoteComment;
 
 export abstract class BaseMQ {
   protected queue: Queue;
@@ -72,7 +73,7 @@ export abstract class BaseMQ {
   }
 
   protected async addJob(jobName: string, data: TJobData): Promise<void> {
-    const job = await this.queue.add(jobName, data);
+    const job = await this.queue.add(jobName, data, { removeOnComplete: true });
     logger.info(`[BullMQ - ${this.queue.name}]: Job with ID '${job.id}' has been added to the queue.`);
   }
 
@@ -94,6 +95,10 @@ export abstract class BaseMQ {
         id: job?.id ?? "No ID",
         error,
       });
+    });
+
+    this.worker.on("error", (error) => {
+      logger.fatal("BullMQ encountered an error", error);
     });
   }
 }
