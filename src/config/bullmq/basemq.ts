@@ -15,7 +15,7 @@ type TJobData = IAuthUserJob | IUserJob | IEmailJob | IPostJob | IReactionJob | 
 
 export abstract class BaseMQ {
   protected queue: Queue;
-  worker: Worker | undefined;
+  private worker: Worker | undefined;
   private queueEvents: QueueEvents;
   private static queues: BullMQAdapter[] = [];
   static router: any;
@@ -73,7 +73,7 @@ export abstract class BaseMQ {
   }
 
   protected async addJob(jobName: string, data: TJobData): Promise<void> {
-    const job = await this.queue.add(jobName, data);
+    const job = await this.queue.add(jobName, data, { removeOnComplete: true });
     logger.info(`[BullMQ - ${this.queue.name}]: Job with ID '${job.id}' has been added to the queue.`);
   }
 

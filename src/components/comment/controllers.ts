@@ -1,13 +1,8 @@
 import { joiRequestValidator } from "@utils/decorators/joi-validation-decorator";
-import { NextFunction, Request, Response } from "express";
+import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import {
-  GITDEV_COMMENT_CREATE_JOB,
-  GITDEV_COMMENT_DELETE_JOB,
-  GITDEV_COMMENT_PAGE_SIZE,
-  GITDEV_COMMENT_UPDATE_JOB,
-} from "./constants";
-import { ICommentDocument } from "./interfaces";
+import { GITDEV_COMMENT_PAGE_SIZE } from "./constants";
+import { ICreateComment, IDeleteComment, IUpdateComment, IVoteComment } from "./interfaces";
 import {
   commentSchema,
   commentSchemaParams,
@@ -16,37 +11,32 @@ import {
   deleteCommentSchemaQuery,
   updateCommentSchema,
   updateCommentSchemaParams,
+  voteCommentSchema,
+  voteCommentSchemaParams,
 } from "./data/joi-schemes/comment";
-import { createCommentMQ, deleteCommentMQ, updateCommentMQ } from "./bullmq/comment-mq";
 import { CommentServices } from "./services";
 import { Types } from "mongoose";
 
 export class CommentControllers {
   @joiRequestValidator(commentSchema)
   @joiRequestValidator(commentSchemaParams, { params: true, body: false })
-  static async createComment(req: Request, res: Response, next: NextFunction): Promise<void> {
+  static async createComment(req: Request, res: Response): Promise<void> {
     const { postId } = req.params;
     const { content, parentCommentId } = req.body;
 
-    await createCommentMQ.addJob(GITDEV_COMMENT_CREATE_JOB, {
+    const data: ICreateComment = {
       content,
       postId,
       userId: req.currentUser?.userId as string,
       parentCommentId,
-    });
+    };
 
-    createCommentMQ.worker?.on("completed", (_, result: ICommentDocument) => {
-      res.status(StatusCodes.CREATED).json({
-        success: true,
-        message: "Comment created successfully",
-        data: result,
-      });
-    });
+    const result = await CommentServices.createComment(data);
 
-    createCommentMQ.worker?.on("failed", (_, error) => {
-      if (!res.headersSent) {
-        next(error);
-      }
+    res.status(StatusCodes.CREATED).json({
+      success: true,
+      message: "Comment created successfully",
+      data: result,
     });
   }
 
@@ -79,55 +69,64 @@ export class CommentControllers {
 
   @joiRequestValidator(deleteCommentSchemaParams, { body: false, params: true })
   @joiRequestValidator(deleteCommentSchemaQuery, { body: false, query: true })
-  static async deleteComment(req: Request, res: Response, next: NextFunction): Promise<void> {
+  static async deleteComment(req: Request, res: Response): Promise<void> {
     const { commentId } = req.params;
-    const { parentCommentId } = req.query as { parentCommentId?: string };
+    const { parent } = req.query as { parent?: string };
 
-    await deleteCommentMQ.addJob(GITDEV_COMMENT_DELETE_JOB, {
+    const data: IDeleteComment = {
       commentId,
       userId: req.currentUser?.userId as string,
-      parentCommentId,
-    });
+      parentCommentId: parent,
+    };
 
-    deleteCommentMQ.worker?.on("completed", (_, result: Record<string, string>) => {
-      res.status(StatusCodes.OK).json({
-        success: true,
-        message: "Comment deleted successfully",
-        data: result,
-      });
-    });
+    const result = await CommentServices.deleteComment(data);
 
-    deleteCommentMQ.worker?.on("failed", (_, error) => {
-      if (!res.headersSent) {
-        next(error);
-      }
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Comment deleted successfully",
+      data: result,
     });
   }
 
   @joiRequestValidator(updateCommentSchema)
   @joiRequestValidator(updateCommentSchemaParams, { params: true, body: false })
-  static async updateComment(req: Request, res: Response, next: NextFunction): Promise<void> {
+  static async updateComment(req: Request, res: Response): Promise<void> {
     const { commentId } = req.params;
     const { content } = req.body;
 
-    await updateCommentMQ.addJob(GITDEV_COMMENT_UPDATE_JOB, {
+    const data: IUpdateComment = {
       commentId,
       content,
       userId: req.currentUser?.userId as string,
-    });
+    };
 
-    updateCommentMQ.worker?.on("completed", (_, result: ICommentDocument) => {
-      res.status(StatusCodes.OK).json({
-        success: true,
-        message: "Comment updated successfully",
-        data: result,
-      });
-    });
+    const result = await CommentServices.updateComment(data);
 
-    updateCommentMQ.worker?.on("failed", (_, error) => {
-      if (!res.headersSent) {
-        next(error);
-      }
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Comment updated successfully",
+      data: result,
+    });
+  }
+
+  @joiRequestValidator(voteCommentSchema)
+  @joiRequestValidator(voteCommentSchemaParams, { params: true, body: false })
+  static async voteComment(req: Request, res: Response): Promise<void> {
+    const { commentId } = req.params;
+    const { value } = req.body;
+
+    const data: IVoteComment = {
+      commentId,
+      userId: req.currentUser?.userId as string,
+      value,
+    };
+
+    const result = await CommentServices.voteComment(data);
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Comment voted successfully",
+      data: result,
     });
   }
 }

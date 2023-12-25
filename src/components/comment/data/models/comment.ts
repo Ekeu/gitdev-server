@@ -40,7 +40,7 @@ const commentSchema = new Schema(
   },
 );
 
-const commentVoteSchema = new Schema({
+const votesCommentSchema = new Schema({
   commentId: {
     type: Schema.Types.ObjectId,
     ref: "Comment",
@@ -60,9 +60,9 @@ const commentVoteSchema = new Schema({
   },
 });
 
-commentVoteSchema.index({ commentId: 1, user: 1 }, { unique: true });
+votesCommentSchema.index({ commentId: 1, user: 1 }, { unique: true });
 
 const Comment = model<ICommentDocument>("Comment", commentSchema);
-const VoteComment = model<IVoteCommentDocument>("CommentVote", commentVoteSchema);
+const VotesComment = model<IVoteCommentDocument>("VotesComment", votesCommentSchema);
 
-export { Comment, VoteComment };
+export { Comment, VotesComment };

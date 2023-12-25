@@ -20,6 +20,40 @@ export class CommentRoutes {
      */
     router.get("/comments/posts/:postId/:page", AuthMiddleware.isAuthtenticated, CommentControllers.getComments);
 
+    /**
+     * @method DELETE
+     * @param {string} path - /comments/:commentId/delete
+     * @description - Deletes a comment
+     * @query {string} parent - The parent comment id
+     */
+    router.delete(
+      "/comments/posts/:postId/:commentId",
+      AuthMiddleware.isAuthtenticated,
+      CommentControllers.deleteComment,
+    );
+
+    /**
+     * @method PATCH
+     * @param {string} path - /comments/:commentId/update
+     * @description - Updates a comment
+     */
+    router.patch(
+      "/comments/posts/:postId/:commentId",
+      AuthMiddleware.isAuthtenticated,
+      CommentControllers.updateComment,
+    );
+
+    /**
+     * @method POST
+     * @param {string} path - /comments/:commentId/vote
+     * @description - Votes a comment
+     */
+    router.post(
+      "/comments/posts/:postId/:commentId/vote",
+      AuthMiddleware.isAuthtenticated,
+      CommentControllers.voteComment,
+    );
+
     return router;
   }
 }

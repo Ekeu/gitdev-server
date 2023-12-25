@@ -1,4 +1,4 @@
-import { Comment, VoteComment } from "./data/models/comment";
+import { Comment, VotesComment } from "./data/models/comment";
 import {
   ICommentDocument,
   IVoteComment,
@@ -60,7 +60,7 @@ export class CommentServices {
 
       await Promise.all([
         Comment.deleteOne({ _id: commentId }),
-        VoteComment.deleteMany({ commentId }),
+        VotesComment.deleteMany({ commentId }),
         ...(parentCommentId
           ? [Comment.updateOne({ parentCommentId }, { $pull: { childrenComments: commentId } })]
           : [Comment.deleteMany({ parentCommentId: commentId })]),
@@ -102,14 +102,33 @@ export class CommentServices {
           $unwind: "$user",
         },
         {
-          $project: {
-            content: 1,
-            parentCommentId: 1,
-            user: 1,
-            createdAt: 1,
-            votes: {
-              $size: "$votes",
-            },
+          $unwind: {
+            path: "$votes",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $lookup: {
+            from: "commentvotes",
+            localField: "votes",
+            foreignField: "_id",
+            as: "votesData",
+          },
+        },
+        {
+          $unwind: {
+            path: "$votesData",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $group: {
+            _id: "$_id",
+            content: { $first: "$content" },
+            parentCommentId: { $first: "$parentCommentId" },
+            user: { $first: "$user" },
+            createdAt: { $first: "$createdAt" },
+            votes: { $sum: "$votesData.count" },
           },
         },
         {
@@ -119,13 +138,13 @@ export class CommentServices {
         },
       ]);
 
-      const _votes = await VoteComment.find({ commentId: { $in: data.map((comment) => comment._id) }, user: userId });
+      const _votes = await VotesComment.find({ commentId: { $in: data.map((comment) => comment._id) }, user: userId });
 
       const comments = data.map((comment) => {
-        const { votes, ...rest } = comment;
+        const { ...rest } = comment;
         return {
           ...rest,
-          votesCount: votes,
+          //votesCount: votes,
           user: {
             ...comment.user,
             voted: _votes.find((vote) => vote.commentId === comment._id),
@@ -179,12 +198,11 @@ export class CommentServices {
 
   static async voteComment(data: IVoteComment): Promise<Record<string, boolean>> {
     const { commentId, userId, value } = data;
-
     try {
-      const vote = await VoteComment.findOne({ commentId, user: userId });
+      const vote = await VotesComment.findOne({ commentId, user: userId });
 
       if (!vote) {
-        const vc = await VoteComment.create({
+        const vc = await VotesComment.create({
           commentId,
           user: userId,
           count: value,
@@ -196,13 +214,13 @@ export class CommentServices {
       }
 
       if (vote.count === value) {
-        await VoteComment.deleteOne({ commentId, user: userId });
+        await VotesComment.deleteOne({ commentId, user: userId });
 
         await Comment.updateOne({ _id: commentId }, { $pull: { votes: vote._id } });
         return { voted: false };
       }
 
-      await VoteComment.updateOne({ commentId, user: userId }, { count: value });
+      await VotesComment.updateOne({ commentId, user: userId }, { count: value });
       return { voted: true };
     } catch (error) {
       const err = error as Error;

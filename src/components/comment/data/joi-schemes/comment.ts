@@ -41,16 +41,24 @@ export const updateCommentSchemaParams: ObjectSchema = Joi.object({
 });
 
 export const voteCommentSchema: ObjectSchema = Joi.object({
-  commentId: Joi.string().required().messages({
-    "string.base": "Comment ID must be a string.",
-    "string.empty": "Comment ID cannot be empty.",
-    "any.required": "Comment ID is required.",
-  }),
   value: Joi.number().integer().valid(-1, 1).required().messages({
     "number.base": "Vote value must be a number.",
     "number.integer": "Vote value must be an integer.",
     "any.required": "Vote value is required.",
     "any.only": "Vote value must be either -1 (downvote) or 1 (upvote).",
+  }),
+});
+
+export const voteCommentSchemaParams: ObjectSchema = Joi.object({
+  commentId: Joi.string().required().messages({
+    "string.base": "Comment ID must be a string.",
+    "string.empty": "Comment ID cannot be empty.",
+    "any.required": "Comment ID is required.",
+  }),
+  postId: Joi.string().required().messages({
+    "string.base": "Post ID must be a string.",
+    "string.empty": "Post ID cannot be empty.",
+    "any.required": "Post ID is required.",
   }),
 });
 

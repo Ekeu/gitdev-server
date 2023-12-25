@@ -1,10 +1,1 @@
-export const GITDEV_COMMENT_CACHE = "gitdev-comment-cache";
-export const GITDEV_COMMENT_CREATE_QUEUE = "comment-mq-create";
-export const GITDEV_COMMENT_DELETE_QUEUE = "comment-mq-delete";
-export const GITDEV_COMMENT_UPDATE_QUEUE = "comment-mq-update";
-export const GITDEV_COMMENT_VOTE_QUEUE = "comment-mq-vote";
-export const GITDEV_COMMENT_CREATE_JOB = "job-comment-mq-create";
-export const GITDEV_COMMENT_DELETE_JOB = "job-comment-mq-delete";
-export const GITDEV_COMMENT_UPDATE_JOB = "job-comment-mq-update";
-export const GITDEV_COMMENT_VOTE_JOB = "job-comment-mq-vote";
 export const GITDEV_COMMENT_PAGE_SIZE = 20;
