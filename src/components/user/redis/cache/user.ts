@@ -1,5 +1,5 @@
 import _ from "lodash";
-import { IUserDocument } from "@components/user/interfaces";
+import { IUserDocument, TUserBlockAction } from "@components/user/interfaces";
 import { logger } from "@config/logger";
 import { ApiError } from "@utils/errors/api-error";
 import { RedisClient } from "@config/redis/client";
@@ -50,6 +50,50 @@ export class UserCache extends RedisClient {
       };
     } catch (error) {
       logger.error(`Error getting user data from cache: ${(error as Error).message}`, error);
+      throw new ApiError("RedisError");
+    }
+  }
+
+  async updateUserBlockList(userId: string, blockedUserId: string, action: TUserBlockAction) {
+    try {
+      if (!this.client.isOpen) {
+        await this.client.connect();
+      }
+
+      const userKey = `users:${userId}`;
+      const blockedUserKey = `users:${blockedUserId}`;
+
+      const _blocked = await this.client.HGET(`${userKey}`, "blocked");
+      const _blockedBy = await this.client.HGET(`${blockedUserKey}`, "blockedBy");
+
+      const blocked = _blocked ? JSON.parse(_blocked) : [];
+      const blockedBy = _blockedBy ? JSON.parse(_blockedBy) : [];
+
+      const multi = this.client.multi();
+
+      if (action === "block") {
+        if (!blocked.includes(blockedUserId)) {
+          blocked.push(blockedUserId);
+        }
+        if (!blockedBy.includes(userId)) {
+          blockedBy.push(userId);
+        }
+        multi.HSET(userKey, "blocked", JSON.stringify(blocked));
+        multi.HSET(blockedUserKey, "blockedBy", JSON.stringify(blockedBy));
+      } else {
+        if (blocked.includes(blockedUserId)) {
+          _.pull(blocked, blockedUserId);
+        }
+        if (blockedBy.includes(userId)) {
+          _.pull(blockedBy, userId);
+        }
+        multi.HSET(userKey, "blocked", JSON.stringify(blocked));
+        multi.HSET(blockedUserKey, "blockedBy", JSON.stringify(blockedBy));
+      }
+
+      await multi.exec();
+    } catch (error) {
+      logger.error(`Error updating block list: ${(error as Error).message}`, error);
       throw new ApiError("RedisError");
     }
   }

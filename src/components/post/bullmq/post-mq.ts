@@ -9,11 +9,12 @@ import {
 } from "../constants";
 import { IPostJob } from "../interfaces";
 import { PostWorker } from "./post-worker";
+import { Processor } from "bullmq";
 
-class CreatePostMQ extends BaseMQ {
-  constructor() {
-    super(GITDEV_POST_CREATE_QUEUE);
-    this.processJob(GITDEV_CREATE_POST_JOB, PostWorker.createPost, { concurrency: 5 });
+class PostMQ extends BaseMQ {
+  constructor(queueName: string, jobName: string, callback: Processor) {
+    super(queueName);
+    this.processJob(jobName, callback, { concurrency: 5 });
   }
 
   async addJob(jobName: string, data: IPostJob): Promise<void> {
@@ -21,28 +22,6 @@ class CreatePostMQ extends BaseMQ {
   }
 }
 
-class DeletePostMQ extends BaseMQ {
-  constructor() {
-    super(GITDEV_POST_DELETE_QUEUE);
-    this.processJob(GITDEV_DELETE_POST_JOB, PostWorker.deletePost, { concurrency: 5 });
-  }
-
-  async addJob(jobName: string, data: IPostJob): Promise<void> {
-    await this.queue.add(jobName, data);
-  }
-}
-
-class UpdatePostMQ extends BaseMQ {
-  constructor() {
-    super(GITDEV_POST_UPDATE_QUEUE);
-    this.processJob(GITDEV_UPDATE_POST_JOB, PostWorker.updatePost, { concurrency: 5 });
-  }
-
-  async addJob(jobName: string, data: IPostJob): Promise<void> {
-    await this.queue.add(jobName, data);
-  }
-}
-
-export const createPostMQ = new CreatePostMQ();
-export const deletePostMQ = new DeletePostMQ();
-export const updatedPostMQ = new UpdatePostMQ();
+export const createPostMQ = new PostMQ(GITDEV_POST_CREATE_QUEUE, GITDEV_CREATE_POST_JOB, PostWorker.createPost);
+export const deletePostMQ = new PostMQ(GITDEV_POST_DELETE_QUEUE, GITDEV_DELETE_POST_JOB, PostWorker.deletePost);
+export const updatedPostMQ = new PostMQ(GITDEV_POST_UPDATE_QUEUE, GITDEV_UPDATE_POST_JOB, PostWorker.updatePost);

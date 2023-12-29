@@ -52,6 +52,14 @@ export interface IUserJob {
   value: string | IUserDocument;
 }
 
+export interface IUserBlockListJob {
+  userId: string;
+  blockedUserId: string;
+  action: TUserBlockAction;
+}
+
 export interface IUserJobResponse {
   _id: string | ObjectId;
 }
+
+export type TUserBlockAction = "block" | "unblock";

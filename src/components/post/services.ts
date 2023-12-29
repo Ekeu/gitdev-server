@@ -29,7 +29,7 @@ export class PostServices {
     query: IPostQuery,
     skip: number = 0,
     limit: number = 0,
-    sort: Record<string, 1 | -1>,
+    sort: Record<string, 1 | -1> = { createdAt: -1 },
   ): Promise<IPostDocument[]> {
     try {
       const posts = await Post.aggregate([

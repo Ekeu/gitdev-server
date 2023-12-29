@@ -7,6 +7,7 @@ import { errorMiddlewares } from "@utils/errors/error-middlewares";
 import { PostRoutes } from "@components/post/routes";
 import { ReactionRoutes } from "@components/reaction/routes";
 import { CommentRoutes } from "@components/comment/routes";
+import { FollowRoutes } from "@components/follow/routes";
 
 // Validate environment variables
 env.validateEnvs();
@@ -21,6 +22,7 @@ const app = new App(
     PostRoutes.getRoutes(),
     ReactionRoutes.getRoutes(),
     CommentRoutes.getRoutes(),
+    FollowRoutes.getRoutes(),
   ],
   errorMiddlewares,
 );

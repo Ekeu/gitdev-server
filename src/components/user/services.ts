@@ -1,7 +1,7 @@
 import { ApiError } from "@utils/errors/api-error";
 import { StatusCodes } from "http-status-codes";
 import { generateFromEmail } from "unique-username-generator";
-import { IUserDocument } from "./interfaces";
+import { IUserDocument, TUserBlockAction } from "./interfaces";
 import { User } from "./data/models/user";
 import { ObjectId, Types } from "mongoose";
 import { ISocialAuthGithubProfile, ISocialAuthGoogleProfile } from "@components/auth/interfaces";
@@ -134,4 +134,33 @@ export class UserServices {
     });
     return user.toObject();
   };
+
+  static async updateUserBlockList(userId: string, blockedUserId: string, action: TUserBlockAction) {
+    try {
+      const _userId = new Types.ObjectId(userId);
+      const _blockedUserId = new Types.ObjectId(blockedUserId);
+      const operator = action === "block" ? "$push" : "$pull";
+
+      const blockedFilter = action === "block" ? { $ne: _blockedUserId } : _blockedUserId;
+      const blockedByFilter = action === "block" ? { $ne: _userId } : _userId;
+
+      await User.bulkWrite([
+        {
+          updateOne: {
+            filter: { _id: _userId, blocked: blockedFilter },
+            update: { [operator]: { blocked: _blockedUserId } },
+          },
+        },
+        {
+          updateOne: {
+            filter: { _id: _blockedUserId, blockedBy: blockedByFilter },
+            update: { [operator]: { blockedBy: _userId } },
+          },
+        },
+      ]);
+    } catch (error) {
+      const err = error as Error;
+      throw new ApiError(err.name, StatusCodes.BAD_REQUEST, err.message);
+    }
+  }
 }

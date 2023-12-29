@@ -1,5 +1,5 @@
 import { Job } from "bullmq";
-import { IUserDocument, IUserJob, IUserJobResponse } from "../interfaces";
+import { IUserBlockListJob, IUserDocument, IUserJob, IUserJobResponse } from "../interfaces";
 import { UserServices } from "../services";
 
 export class UserWorker {
@@ -8,5 +8,10 @@ export class UserWorker {
     return {
       _id: user._id.toString(),
     };
+  }
+
+  static async updateUserBlockList(job: Job<IUserBlockListJob>): Promise<void> {
+    const { userId, blockedUserId, action } = job.data;
+    await UserServices.updateUserBlockList(userId, blockedUserId, action);
   }
 }

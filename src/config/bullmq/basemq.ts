@@ -10,8 +10,9 @@ import { IEmailJob } from "@components/mail/interfaces";
 import { IPostJob } from "@components/post/interfaces";
 import { IReactionJob } from "@components/reaction/interfaces";
 import { IVoteComment } from "@components/comment/interfaces";
+import { IFollowJob } from "@components/follow/interfaces";
 
-type TJobData = IAuthUserJob | IUserJob | IEmailJob | IPostJob | IReactionJob | IVoteComment;
+type TJobData = IAuthUserJob | IUserJob | IEmailJob | IPostJob | IReactionJob | IVoteComment | IFollowJob;
 
 export abstract class BaseMQ {
   protected queue: Queue;
