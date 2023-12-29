@@ -34,7 +34,7 @@ export class PostCache extends RedisClient {
     }
   }
 
-  async get(range: IPostRange, options?: IZRangeOptions): Promise<IPostDocument[] | null> {
+  async get(range: IPostRange, options?: IZRangeOptions): Promise<IPostDocument[]> {
     try {
       if (!this.client.isOpen) {
         await this.client.connect();
@@ -44,6 +44,9 @@ export class PostCache extends RedisClient {
         REV: true,
         ...(options ? options : {}),
       });
+
+      if (!res.length) return [];
+
       const multi = this.client.multi();
 
       res.forEach((id) => {

@@ -7,11 +7,12 @@ import {
 } from "../constants";
 import { IReactionJob } from "../interfaces";
 import { ReactionWorker } from "./reaction-worker";
+import { Processor } from "bullmq";
 
-class CreateReactionMQ extends BaseMQ {
-  constructor() {
-    super(GITDEV_REACTION_CREATE_QUEUE);
-    this.processJob(GITDEV_REACTION_CREATE_JOB, ReactionWorker.createReaction, { concurrency: 5 });
+class ReactionMQ extends BaseMQ {
+  constructor(queueName: string, jobName: string, callback: Processor) {
+    super(queueName);
+    this.processJob(jobName, callback, { concurrency: 5 });
   }
 
   async addJob(jobName: string, data: IReactionJob): Promise<void> {
@@ -19,16 +20,13 @@ class CreateReactionMQ extends BaseMQ {
   }
 }
 
-class DeleteReactionMQ extends BaseMQ {
-  constructor() {
-    super(GITDEV_REACTION_DELETE_QUEUE);
-    this.processJob(GITDEV_REACTION_DELETE_JOB, ReactionWorker.deleteReaction, { concurrency: 5 });
-  }
-
-  async addJob(jobName: string, data: IReactionJob): Promise<void> {
-    await this.queue.add(jobName, data);
-  }
-}
-
-export const createReactionMQ = new CreateReactionMQ();
-export const deleteReactionMQ = new DeleteReactionMQ();
+export const createReactionMQ = new ReactionMQ(
+  GITDEV_REACTION_CREATE_QUEUE,
+  GITDEV_REACTION_CREATE_JOB,
+  ReactionWorker.createReaction,
+);
+export const deleteReactionMQ = new ReactionMQ(
+  GITDEV_REACTION_DELETE_QUEUE,
+  GITDEV_REACTION_DELETE_JOB,
+  ReactionWorker.deleteReaction,
+);

@@ -35,20 +35,47 @@ export const removeNonAlphaNumericCharacters = (str: string): string => {
   return formattedStr;
 };
 
-export const getUserAuthLookup = () => {
-  return {
-    $lookup: {
-      from: "users",
+interface IUserAuthLookup {
+  user?: {
+    localField?: string;
+    foreignField?: string;
+    as?: string;
+  };
+  authUser?: {
+    localField?: string;
+    foreignField?: string;
+    as?: string;
+  };
+}
+
+export const getUserAuthLookup = (config?: IUserAuthLookup) => {
+  const _config = {
+    user: {
       localField: "user",
       foreignField: "_id",
       as: "user",
+      ...(config?.user || {}),
+    },
+    authUser: {
+      localField: "authUser",
+      foreignField: "_id",
+      as: "authUser",
+      ...(config?.authUser || {}),
+    },
+  };
+  return {
+    $lookup: {
+      from: "users",
+      localField: _config.user.localField,
+      foreignField: _config.user.foreignField,
+      as: _config.user.as,
       pipeline: [
         {
           $lookup: {
             from: "authusers",
-            localField: "_id",
-            foreignField: "_id",
-            as: "authUser",
+            localField: _config.authUser.localField,
+            foreignField: _config.authUser.foreignField,
+            as: _config.authUser.as,
           },
         },
         {
