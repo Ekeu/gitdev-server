@@ -35,16 +35,18 @@ export const removeNonAlphaNumericCharacters = (str: string): string => {
   return formattedStr;
 };
 
-interface IUserAuthLookup {
+export interface IUserAuthLookup {
   user?: {
     localField?: string;
     foreignField?: string;
     as?: string;
+    fields?: Array<string>;
   };
   authUser?: {
     localField?: string;
     foreignField?: string;
     as?: string;
+    fields?: Array<string>;
   };
 }
 
@@ -54,12 +56,14 @@ export const getUserAuthLookup = (config?: IUserAuthLookup) => {
       localField: "user",
       foreignField: "_id",
       as: "user",
+      fields: [],
       ...(config?.user || {}),
     },
     authUser: {
       localField: "authUser",
       foreignField: "_id",
       as: "authUser",
+      fields: [],
       ...(config?.authUser || {}),
     },
   };
@@ -82,6 +86,12 @@ export const getUserAuthLookup = (config?: IUserAuthLookup) => {
           $project: {
             avatar: 1,
             _id: 1,
+            ...(_config.user.fields.length
+              ? _config.user.fields.reduce((acc: Record<string, number>, field: string) => {
+                  acc[field] = 1;
+                  return acc;
+                }, {})
+              : {}),
             authUser: {
               $arrayElemAt: [
                 {
@@ -91,6 +101,12 @@ export const getUserAuthLookup = (config?: IUserAuthLookup) => {
                     in: {
                       _id: "$$au._id",
                       username: "$$au.username",
+                      ...(_config.authUser.fields.length
+                        ? _config.authUser.fields.reduce((acc: Record<string, string>, field: string) => {
+                            acc[field] = `$$au.${field}`;
+                            return acc;
+                          }, {})
+                        : {}),
                     },
                   },
                 },

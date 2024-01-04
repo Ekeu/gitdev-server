@@ -13,6 +13,7 @@ import { FollowServices } from "./services";
 import { followMQ, unFollowMQ } from "./bullmq/follow-mq";
 import { IFollowRange, IPartialUserDocument, TFollows } from "./interfaces";
 import { IAuthUserDocument } from "@components/auth/interfaces";
+import { IUserDocument } from "@components/user/interfaces";
 
 export class FollowControllers {
   @joiRequestValidator(followSchema, { body: false, params: true })
@@ -23,19 +24,24 @@ export class FollowControllers {
     await followCache.follow(req.currentUser?.userId as string, followingId);
 
     // Get data of user being followed
-    let user = await userCache.get("users", `${followingId}`);
+    let user: IUserDocument | null = (await userCache.get("users", `${followingId}`)) as IUserDocument | null;
+
+    if (user) {
+      const authUser = await userCache.get("authUsers", `${user.authUser}`);
+      if (authUser) {
+        user.authUser = authUser as IAuthUserDocument;
+      }
+    }
 
     if (!user) {
-      user = await UserServices.getSelectedFieldsById(followingId, ["_id", "username"]);
+      user = await UserServices.findUserById(followingId);
     }
 
     if (!user) {
       throw new ApiError("UserNotFound", StatusCodes.NOT_FOUND, "User not found");
     }
 
-    const data = _.pick(user, ["_id", "username"]);
-    // Send data to client via socket
-    IOFollow.io.emit(GITDEV_IO_FOLLOW, data);
+    IOFollow.io.emit(GITDEV_IO_FOLLOW, user);
 
     const doc = FollowServices.initFollowDocument({
       follower: req.currentUser?.userId as string,

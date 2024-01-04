@@ -72,8 +72,8 @@ export class UserServices {
 
   static async getAuthLookUpData(
     id: string,
-    authFields: string[],
-    userFields: string[],
+    authFields: string[] = [],
+    userFields: string[] = [],
   ): Promise<IUserDocument | null> {
     try {
       const user = await User.aggregate([

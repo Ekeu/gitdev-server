@@ -4,9 +4,9 @@ import { IFollowJob, INewFollow, INewFollowJobResponse } from "../interfaces";
 
 export class FollowWorker {
   static async follow(job: Job<IFollowJob>): Promise<INewFollowJobResponse> {
-    const post = await FollowServices.follow(job.data.value as INewFollow);
+    const res = await FollowServices.follow(job.data.value as INewFollow);
     return {
-      _id: post._id.toString(),
+      _id: res._id.toString(),
     };
   }
 

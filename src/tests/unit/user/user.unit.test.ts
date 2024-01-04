@@ -9,6 +9,8 @@ import { UserControllers } from "@components/user/controllers";
 import { mockAuthDoc, mockUser, mockUserDoc } from "@/tests/mocks/auth-user";
 import { userCache } from "@components/user/redis/cache/user";
 
+jest.mock("@sendgrid/mail");
+jest.mock("@config/bullmq/basemq");
 jest.mock("@config/bullmq/basemq");
 jest.mock("@components/user/redis/cache/user");
 

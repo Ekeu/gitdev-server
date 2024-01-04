@@ -13,7 +13,7 @@ import { AuthUserControllers } from "@components/auth/controllers";
 import { NextFunction } from "express";
 import { AuthUserServices } from "@components/auth/services";
 import { IAuthUserDocument } from "@components/auth/interfaces";
-import { emailMQ } from "@components/mail/bullmq/mail-mq";
+import { emailForgotMQ } from "@components/mail/bullmq/mail-mq";
 
 jest.mock("@sendgrid/mail");
 jest.mock("@config/bullmq/basemq");
@@ -63,9 +63,9 @@ describe("Auth Controller [Password]", () => {
       jest
         .spyOn(AuthUserServices, "findUserByEmail")
         .mockResolvedValueOnce(mockAuthDoc as unknown as IAuthUserDocument);
-      jest.spyOn(emailMQ, "addJob");
+      jest.spyOn(emailForgotMQ, "addJob");
       await AuthUserControllers.forgotPassword(req, res, next);
-      expect(emailMQ.addJob).toHaveBeenCalled();
+      expect(emailForgotMQ.addJob).toHaveBeenCalled();
       expect(res.statusCode).toBe(200);
       expect(res._getJSONData().success).toEqual(true);
     });
@@ -119,10 +119,10 @@ describe("Auth Controller [Password]", () => {
       jest
         .spyOn(AuthUserServices, "findAuthUserById")
         .mockResolvedValueOnce(mockAuthDoc as unknown as IAuthUserDocument);
-      jest.spyOn(emailMQ, "addJob");
+      jest.spyOn(emailForgotMQ, "addJob");
       await AuthUserControllers.resetPassword(req, res, next);
 
-      expect(emailMQ.addJob).toHaveBeenCalled();
+      expect(emailForgotMQ.addJob).toHaveBeenCalled();
       expect(res.statusCode).toBe(200);
       expect(res._getJSONData().success).toEqual(true);
     });

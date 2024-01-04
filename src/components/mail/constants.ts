@@ -1,4 +1,10 @@
-export const GITDEV_EMAIL_QUEUE = "email-mq";
-export const GITDEV_EMAIL_FORGOT_PASSWORD_JOB = "job-mq-forgot-password";
-export const GITDEV_EMAIL_RESET_PASSWORD_JOB = "job-mq-reset-password";
-export const GITDEV_EMAIL_VERIFY_ACCOUNT_JOB = "job-mq-verify-account";
+export const GITDEV_EMAIL_FORGOT_QUEUE = "email-forgot-mq";
+export const GITDEV_EMAIL_COMMENT_QUEUE = "email-comment-mq";
+export const GITDEV_EMAIL_FOLLOW_QUEUE = "email-follow-mq";
+export const GITDEV_EMAIL_REACTION_QUEUE = "email-reaction-mq";
+export const GITDEV_EMAIL_REACTION_JOB = "job-email-reaction-mq";
+export const GITDEV_EMAIL_FORGOT_PASSWORD_JOB = "job-email-forgot-password";
+export const GITDEV_EMAIL_COMMENT_JOB = "job-email-comment";
+export const GITDEV_EMAIL_FOLLOW_JOB = "job-email-follow";
+export const GITDEV_EMAIL_RESET_PASSWORD_JOB = "job-email-reset-password";
+export const GITDEV_EMAIL_VERIFY_ACCOUNT_JOB = "job-email-verify-account";

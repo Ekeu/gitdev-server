@@ -8,7 +8,18 @@ import {
   IUpdateComment,
 } from "./interfaces";
 import { StatusCodes } from "http-status-codes";
+import path from "path";
 import { ApiError } from "@utils/errors/api-error";
+import { IUserDocument } from "@components/user/interfaces";
+import { env } from "@/env";
+import { getUserAuthLookup } from "@utils/common";
+import { IAuthUserDocument } from "@components/auth/interfaces";
+import { Types } from "mongoose";
+import { PostServices } from "@components/post/services";
+import { UserServices } from "@components/user/services";
+import { NotificationServices } from "@components/notification/services";
+import { GITDEV_EMAIL_COMMENT_JOB } from "@components/mail/constants";
+import { emailCommentMQ } from "@components/mail/bullmq/mail-mq";
 
 export class CommentServices {
   static async createComment(data: ICreateComment): Promise<ICommentDocument> {
@@ -22,16 +33,80 @@ export class CommentServices {
         parentCommentId,
       });
 
-      // Add to childrenComments if parentCommentId is present
+      const post = await PostServices.findPostById(postId, {
+        authUser: { fields: ["email", "username"] },
+        user: { fields: ["notifications"] },
+      });
+      const ejsFile = path.join(__dirname, "..", "..", "config", "mail", "templates", "notification.ejs");
+      const user = await UserServices.getAuthLookUpData(userId, ["username"]);
+      const username = (user!.authUser as IAuthUserDocument).username;
+      const notificationLink = `${env.GITDEV_CLIENT_URL}/posts/${postId}?commentId=${doc._id.toString()}`;
+
       if (parentCommentId) {
         await Comment.updateOne({ _id: parentCommentId }, { $push: { childrenComments: doc._id } });
-      }
 
-      /**
-       * TODO: Send notifications to:
-       *  - Post owner
-       *  - Comment owner (if parentCommentId is present)
-       */
+        const data = await Comment.aggregate([
+          { $match: { _id: new Types.ObjectId(parentCommentId) } },
+          getUserAuthLookup({ authUser: { fields: ["email"] }, user: { fields: ["notifications"] } }),
+          {
+            $unwind: "$user",
+          },
+        ]);
+
+        const parentComment = data[0] as ICommentDocument;
+
+        if (!parentComment) {
+          throw new ApiError("CommentNotFound", StatusCodes.NOT_FOUND, "Parent comment not found");
+        }
+
+        const receiver = (parentComment.user as IUserDocument)._id.toString();
+        const email = ((parentComment.user as IUserDocument).authUser as IAuthUserDocument).email;
+        const message = `${username} replied to your comment`;
+
+        NotificationServices.createAndSendNotification(
+          {
+            message,
+            senderId: userId,
+            notificationLink,
+            receiverEmail: email,
+            receiverId: receiver,
+            entityType: "Comment",
+            relatedEntityId: postId,
+            ejsTemplatePath: ejsFile,
+            receiverUsername: ((parentComment.user as IUserDocument).authUser as IAuthUserDocument).username,
+            relatedEntityType: "Post",
+            entityId: doc._id.toString(),
+            sendNotification: (parentComment.user as IUserDocument).notifications.comments,
+          },
+          emailCommentMQ,
+          GITDEV_EMAIL_COMMENT_JOB,
+        );
+      } else {
+        if (post) {
+          const receiver = (post.user as IUserDocument)._id.toString();
+          const email = ((post.user as IUserDocument).authUser as IAuthUserDocument).email;
+          const message = `${username} commented on your post`;
+
+          NotificationServices.createAndSendNotification(
+            {
+              message,
+              senderId: userId,
+              notificationLink,
+              receiverId: receiver,
+              receiverEmail: email,
+              entityType: "Comment",
+              relatedEntityId: postId,
+              ejsTemplatePath: ejsFile,
+              receiverUsername: ((post.user as IUserDocument).authUser as IAuthUserDocument).username,
+              relatedEntityType: "Post",
+              entityId: doc._id.toString(),
+              sendNotification: (post.user as IUserDocument).notifications.comments,
+            },
+            emailCommentMQ,
+            GITDEV_EMAIL_COMMENT_JOB,
+          );
+        }
+      }
 
       const comment = await Comment.findOne({ _id: doc._id })
         .select("content parentId user parentId createdAt")
