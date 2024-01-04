@@ -11,10 +11,12 @@ import { FollowServices } from "@components/follow/services";
 import { IFollowDocument } from "@components/follow/interfaces";
 import { FollowControllers } from "@components/follow/controllers";
 
+jest.mock("@sendgrid/mail");
 jest.mock("@config/bullmq/basemq");
 jest.mock("@components/follow/bullmq/follow-mq");
 jest.mock("@components/follow/redis/cache/follow");
 jest.mock("@components/user/services");
+jest.mock("@components/notification/services");
 jest.mock("@components/follow/services");
 jest.mock("@components/follow/socket/index", () => {
   return {

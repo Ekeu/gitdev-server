@@ -13,6 +13,11 @@ import { CommentServices } from "@components/comment/services";
 import { ICommentDocument } from "@components/comment/interfaces";
 import { CommentControllers } from "@components/comment/controllers";
 
+jest.mock("@sendgrid/mail");
+jest.mock("@config/bullmq/basemq");
+jest.mock("@components/user/services");
+jest.mock("@components/notification/services");
+
 jest.spyOn(CommentServices, "createComment").mockResolvedValue(mockCommentDoc as ICommentDocument);
 jest.spyOn(CommentServices, "getComments").mockResolvedValue([mockCommentDoc] as ICommentDocument[]);
 

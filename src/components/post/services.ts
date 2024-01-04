@@ -5,7 +5,7 @@ import { StatusCodes } from "http-status-codes";
 import { User } from "@components/user/data/models/user";
 import { IPostQuery } from "@components/post/interfaces";
 import { Types } from "mongoose";
-import { getUserAuthLookup } from "@utils/common";
+import { IUserAuthLookup, getUserAuthLookup } from "@utils/common";
 
 export class PostServices {
   static initPostDocument(data: INewPost): IPostDocument {
@@ -72,11 +72,11 @@ export class PostServices {
     await Post.findByIdAndUpdate(postId, updatedPost);
   }
 
-  static async findPostById(id: string): Promise<IPostDocument | null> {
+  static async findPostById(id: string, config?: IUserAuthLookup): Promise<IPostDocument | null> {
     try {
       const post = await Post.aggregate([
         { $match: { _id: new Types.ObjectId(id) } },
-        getUserAuthLookup(),
+        getUserAuthLookup(config),
         { $unwind: "$user" },
       ]);
       if (!post.length) return null;

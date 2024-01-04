@@ -1,7 +1,7 @@
 import ejs, { Data } from "ejs";
 
 export class MailServices {
-  static getEJSTemplate(path: string, data?: Data): string {
-    return ejs.render(path, { ...(data || {}) });
+  static async getEJSTemplate(path: string, data?: Data): Promise<string> {
+    return await ejs.renderFile(path, { ...(data || {}) });
   }
 }

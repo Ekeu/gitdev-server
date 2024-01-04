@@ -1,5 +1,4 @@
 import { NextFunction, Request, Response } from "express";
-import fs from "fs";
 import path from "path";
 import { StatusCodes } from "http-status-codes";
 import passport from "passport";
@@ -25,7 +24,7 @@ import { accessTokenCookieConfig, refreshTokenCookieConfig } from "@config/cooki
 import { ApiError } from "@utils/errors/api-error";
 import { env } from "@/env";
 import { MailServices } from "@components/mail/services";
-import { emailMQ } from "@components/mail/bullmq/mail-mq";
+import { emailForgotMQ } from "@components/mail/bullmq/mail-mq";
 import {
   GITDEV_EMAIL_FORGOT_PASSWORD_JOB,
   GITDEV_EMAIL_RESET_PASSWORD_JOB,
@@ -280,11 +279,9 @@ export class AuthUserControllers {
       const resetLink = `${env.GITDEV_CLIENT_URL}/reset-password/${encodedToken}`;
 
       try {
-        const ejsFile = fs.readFileSync(path.join(__dirname, "..", "..", "config", "mail", "templates", "forgot.ejs"), {
-          encoding: "utf-8",
-        });
-        const ejsTemplate = MailServices.getEJSTemplate(ejsFile, { resetLink, username: authUser.username });
-        emailMQ.addJob(GITDEV_EMAIL_FORGOT_PASSWORD_JOB, {
+        const ejsFile = path.join(__dirname, "..", "..", "config", "mail", "templates", "forgot.ejs");
+        const ejsTemplate = await MailServices.getEJSTemplate(ejsFile, { resetLink, username: authUser.username });
+        emailForgotMQ.addJob(GITDEV_EMAIL_FORGOT_PASSWORD_JOB, {
           value: {
             to: email,
             subject: "[GitDev] Please reset your password",
@@ -353,17 +350,15 @@ export class AuthUserControllers {
 
       const clientIp = reqIP.getClientIp(req);
       const ua = parser(req.headers["user-agent"]);
-      const ejsFile = fs.readFileSync(path.join(__dirname, "..", "..", "config", "mail", "templates", "reset.ejs"), {
-        encoding: "utf-8",
-      });
-      const ejsTemplate = MailServices.getEJSTemplate(ejsFile, {
+      const ejsFile = path.join(__dirname, "..", "..", "config", "mail", "templates", "reset.ejs");
+      const ejsTemplate = await MailServices.getEJSTemplate(ejsFile, {
         username: authUser.username,
         date: DateTime.now().toLocaleString(DateTime.DATETIME_SHORT),
         ip: clientIp,
         location: clientIp ? `${geoip.lookup(clientIp)?.city} | ${geoip.lookup(clientIp)}` : "Unknown",
         device: `${ua.browser.name} on ${ua.os.name}`,
       });
-      emailMQ.addJob(GITDEV_EMAIL_RESET_PASSWORD_JOB, {
+      emailForgotMQ.addJob(GITDEV_EMAIL_RESET_PASSWORD_JOB, {
         value: {
           to: authUser.email,
           subject: "[GitDev] Your password was reset",
@@ -384,14 +379,12 @@ export class AuthUserControllers {
       encoding: "base32",
       step: env.GITDEV_EMAIL_VERIFICATION_SPEAKEASY_STEPS,
     });
-    const ejsFile = fs.readFileSync(path.join(__dirname, "..", "..", "config", "mail", "templates", "verify.ejs"), {
-      encoding: "utf-8",
-    });
-    const ejsTemplate = MailServices.getEJSTemplate(ejsFile, {
+    const ejsFile = path.join(__dirname, "..", "..", "config", "mail", "templates", "verify.ejs");
+    const ejsTemplate = await MailServices.getEJSTemplate(ejsFile, {
       username: req.currentUser!.username!,
       token: emailVerificationToken,
     });
-    emailMQ.addJob(GITDEV_EMAIL_VERIFY_ACCOUNT_JOB, {
+    emailForgotMQ.addJob(GITDEV_EMAIL_VERIFY_ACCOUNT_JOB, {
       value: {
         to: req.currentUser!.email!,
         subject: "[GitDev] Let the journey begin! 🚀",

@@ -6,6 +6,13 @@ import { User } from "@components/user/data/models/user";
 import { getUserAuthLookup } from "@utils/common";
 import { Types } from "mongoose";
 import { IUserDocument } from "@components/user/interfaces";
+import path from "path";
+import { UserServices } from "@components/user/services";
+import { IAuthUserDocument } from "@components/auth/interfaces";
+import { env } from "@/env";
+import { NotificationServices } from "@components/notification/services";
+import { emailFollowMQ } from "@components/mail/bullmq/mail-mq";
+import { GITDEV_EMAIL_FOLLOW_JOB } from "@components/mail/constants";
 
 export class FollowServices {
   static initFollowDocument(data: INewFollow): IFollowDocument {
@@ -18,25 +25,45 @@ export class FollowServices {
     try {
       const follow = await Follow.create(data);
 
-      const users = await User.bulkWrite([
+      await User.bulkWrite([
         {
           updateOne: {
-            filter: { _id: follower },
+            filter: { _id: new Types.ObjectId(follower) },
             update: { $inc: { followingCount: 1 } },
           },
         },
         {
           updateOne: {
-            filter: { _id: following },
+            filter: { _id: new Types.ObjectId(following) },
             update: { $inc: { followersCount: 1 } },
           },
         },
       ]);
 
-      const followingUserProfile = await User.findOne({ _id: following }, { _id: 1, username: 1 });
+      const ejsFile = path.join(__dirname, "..", "..", "config", "mail", "templates", "notification.ejs");
+      const sender = await UserServices.getAuthLookUpData(follower, ["username"]);
+      const receiver = await UserServices.getAuthLookUpData(following, ["email", "username"], ["notifications"]);
+      const notificationLink = `${env.GITDEV_CLIENT_URL}/users/${follower}`;
+      const message = `${(sender!.authUser as IAuthUserDocument)!.username} started following you`;
 
-      console.log(followingUserProfile);
-      console.log(users);
+      NotificationServices.createAndSendNotification(
+        {
+          message,
+          notificationLink,
+          senderId: follower,
+          entityType: "Follow",
+          receiverId: following,
+          ejsTemplatePath: ejsFile,
+          relatedEntityId: follower,
+          relatedEntityType: "User",
+          entityId: follow._id.toString(),
+          sendNotification: receiver!.notifications.follows,
+          receiverEmail: (receiver!.authUser as IAuthUserDocument).email,
+          receiverUsername: (receiver!.authUser as IAuthUserDocument).username,
+        },
+        emailFollowMQ,
+        GITDEV_EMAIL_FOLLOW_JOB,
+      );
 
       return follow;
     } catch (error) {
@@ -53,7 +80,7 @@ export class FollowServices {
         throw new ApiError("NotFollowing", StatusCodes.BAD_REQUEST, "You are not following this user");
       }
 
-      const follow = await Follow.deleteOne({ follower, following });
+      await Follow.deleteOne({ follower, following });
 
       await User.bulkWrite([
         {
@@ -69,8 +96,6 @@ export class FollowServices {
           },
         },
       ]);
-
-      console.log(follow);
 
       return;
     } catch (error) {

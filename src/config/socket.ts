@@ -6,6 +6,7 @@ import { env } from "@/env";
 import { IOPost } from "@components/post/socket";
 import { IOFollow } from "@components/follow/socket";
 import { IOUser } from "@components/user/socket";
+import { IONotification } from "@components/notification/socket";
 
 export const createSocketIOServer = async (server: HTTPServer): Promise<Server> => {
   const io = new Server(server, {
@@ -26,6 +27,7 @@ export const createSocketIOServer = async (server: HTTPServer): Promise<Server> 
 };
 
 export const socketIOConnections = (io: Server): void => {
+  new IONotification(io);
   const iopost = new IOPost(io);
   const iofollow = new IOFollow(io);
   const iouser = new IOUser(io);

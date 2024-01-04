@@ -13,10 +13,12 @@ import { Types } from "mongoose";
 import { UserServices } from "@components/user/services";
 import { IUserDocument } from "@components/user/interfaces";
 
+jest.mock("@sendgrid/mail");
 jest.mock("@config/bullmq/basemq");
 jest.mock("@components/reaction/bullmq/reaction-mq");
 jest.mock("@components/reaction/redis/cache/reaction");
 jest.mock("@components/user/services");
+jest.mock("@components/notification/services");
 jest.mock("@components/reaction/services");
 
 jest.spyOn(UserServices, "getAuthLookUpData").mockResolvedValue(mockAuthLookup as unknown as IUserDocument);

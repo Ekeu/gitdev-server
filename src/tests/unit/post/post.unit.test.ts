@@ -27,6 +27,7 @@ import {
   GITDEV_UPDATE_POST_JOB,
 } from "@components/post/constants";
 
+jest.mock("@sendgrid/mail");
 jest.mock("@helpers/cloudinary");
 jest.mock("@config/bullmq/basemq");
 jest.mock("@components/post/bullmq/post-mq");

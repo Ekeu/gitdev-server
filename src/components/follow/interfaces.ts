@@ -3,8 +3,8 @@ import { Document } from "mongoose";
 
 export interface INewFollow {
   username?: string;
-  follower: string | IUserDocument;
-  following: string | IUserDocument;
+  follower: string;
+  following: string;
 }
 
 export interface IFollowDocument extends Document {
