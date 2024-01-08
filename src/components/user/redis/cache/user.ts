@@ -54,6 +54,18 @@ export class UserCache extends RedisClient {
     }
   }
 
+  async updateField(key: string, field: string, value: string) {
+    try {
+      if (!this.client.isOpen) {
+        await this.client.connect();
+      }
+      await this.client.HSET(`users:${key}`, field, JSON.stringify(value));
+    } catch (error) {
+      logger.error(`Error updating user field: ${(error as Error).message}`, error);
+      throw new ApiError("RedisError");
+    }
+  }
+
   async updateUserBlockList(userId: string, blockedUserId: string, action: TUserBlockAction) {
     try {
       if (!this.client.isOpen) {

@@ -13,3 +13,9 @@ export const updateUserBlockListSchema: ObjectSchema = Joi.object({
     "any.only": "Action must be either block or unblock. Please check your input.",
   }),
 });
+
+export const avatarUpdateSchema: ObjectSchema = Joi.object({
+  img: Joi.string().optional().default("").messages({
+    "string.base": "Image must be a string.",
+  }),
+});

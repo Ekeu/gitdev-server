@@ -65,7 +65,7 @@ export class PostControllers {
     const response = await uploadImage(img, {
       ...options,
       folder: "posts",
-      tags: [`draft=${req.currentUser?.authUser}`],
+      tags: [`draft=${req.currentUser?.userId}`],
     });
 
     if (!response.public_id) {
@@ -90,7 +90,7 @@ export class PostControllers {
   static async removeTagFromPostImages(req: Request, res: Response) {
     const { publicIds } = req.body;
 
-    const response = await removeTagFromImages(publicIds, `draft=${req.currentUser?.authUser}`);
+    const response = await removeTagFromImages(publicIds, `draft=${req.currentUser?.userId}`);
 
     if (response.public_ids && response.public_ids.length > 0) {
       return res.status(StatusCodes.OK).json({
@@ -107,7 +107,7 @@ export class PostControllers {
   }
 
   static async deletePostDraftImagesByTag(req: Request, res: Response) {
-    const response = await deleteImagesByTag(`draft=${req.currentUser?.authUser}`);
+    const response = await deleteImagesByTag(`draft=${req.currentUser?.userId}`);
 
     if (response.deleted && _.values(response.deleted).includes("deleted")) {
       return res.status(StatusCodes.OK).json({

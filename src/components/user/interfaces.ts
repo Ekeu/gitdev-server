@@ -52,6 +52,11 @@ export interface IUserJob {
   value: string | IUserDocument;
 }
 
+export interface IUserAvatarJob {
+  userId: string;
+  avatar: string;
+}
+
 export interface IUserBlockListJob {
   userId: string;
   blockedUserId: string;

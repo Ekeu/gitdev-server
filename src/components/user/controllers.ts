@@ -4,10 +4,14 @@ import { IAuthUserDocument } from "@components/auth/interfaces";
 import { userCache } from "./redis/cache/user";
 import { UserServices } from "./services";
 import { StatusCodes } from "http-status-codes";
-import { updateUserBlockListMQ } from "./bullmq/user-mq";
-import { GITDEV_USER_BLOCK_LIST_JOB } from "./constants";
+import gravatar from "gravatar";
+import { updateUserAvatarMQ, updateUserBlockListMQ } from "./bullmq/user-mq";
+import { GITDEV_USER_AVATAR_JOB, GITDEV_USER_BLOCK_LIST_JOB } from "./constants";
 import { joiRequestValidator } from "@utils/decorators/joi-validation-decorator";
 import { updateUserBlockListSchema } from "./data/joi-schemes/user";
+import { uploadImage } from "@helpers/cloudinary";
+import { IOUser } from "./socket";
+import { UploadApiResponse } from "cloudinary";
 
 export class UserControllers {
   static async fetchUserProfile(req: Request, res: Response) {
@@ -60,6 +64,53 @@ export class UserControllers {
     res.status(StatusCodes.OK).json({
       success: true,
       message: `User ${action}ed successfully`,
+    });
+  }
+
+  static async updateUserAvatar(req: Request, res: Response) {
+    const { img } = req.body;
+
+    let response: string | UploadApiResponse = "";
+
+    if (img) {
+      response = await uploadImage(img, {
+        folder: "avatars",
+        public_id: req.currentUser?.userId,
+        invalidate: true,
+        overwrite: true,
+      });
+    } else {
+      response = gravatar.url(req.currentUser?.email as string, { d: "retro" }, true);
+    }
+
+    if (img && !(response as UploadApiResponse).public_id) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: "Image upload failed",
+        data: response,
+      });
+    }
+
+    const avatar = img ? (response as UploadApiResponse).secure_url : (response as string);
+
+    await userCache.updateField(req.currentUser?.userId as string, "avatar", avatar);
+
+    IOUser.io.emit("avatar", {
+      userId: req.currentUser?.userId,
+      avatar,
+    });
+
+    updateUserAvatarMQ.addJob(GITDEV_USER_AVATAR_JOB, {
+      userId: req.currentUser?.userId as string,
+      avatar,
+    });
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Avatar updated successfully",
+      data: {
+        avatar,
+      },
     });
   }
 }

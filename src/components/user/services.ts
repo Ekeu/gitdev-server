@@ -163,4 +163,14 @@ export class UserServices {
       throw new ApiError(err.name, StatusCodes.BAD_REQUEST, err.message);
     }
   }
+
+  static async updateAvatar(userId: string, avatar: string) {
+    try {
+      const _userId = new Types.ObjectId(userId);
+      await User.updateOne({ _id: _userId }, { avatar });
+    } catch (error) {
+      const err = error as Error;
+      throw new ApiError(err.name, StatusCodes.BAD_REQUEST, err.message);
+    }
+  }
 }
