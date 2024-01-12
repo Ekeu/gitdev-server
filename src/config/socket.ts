@@ -7,6 +7,7 @@ import { IOPost } from "@components/post/socket";
 import { IOFollow } from "@components/follow/socket";
 import { IOUser } from "@components/user/socket";
 import { IONotification } from "@components/notification/socket";
+import { IOChat } from "@components/chat/socket";
 
 export const createSocketIOServer = async (server: HTTPServer): Promise<Server> => {
   const io = new Server(server, {
@@ -31,8 +32,10 @@ export const socketIOConnections = (io: Server): void => {
   const iopost = new IOPost(io);
   const iofollow = new IOFollow(io);
   const iouser = new IOUser(io);
+  const iochat = new IOChat(io);
 
   iopost.listen();
   iofollow.listen();
   iouser.listen();
+  iochat.listen();
 };

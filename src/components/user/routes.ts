@@ -15,12 +15,23 @@ export class UserRoutes {
 
     /**
      * @method PATCH
-     * @param {string} path - /users/:action/:blockedUserId
+     * @param {string} path - /users/me/:action/:blockedUserId
      * @description - Block or unblock a user
-     * @example - /users/block/60f7a9b9e6b3a4b6f0b0a4a1
-     * @example - /users/unblock/60f7a9b9e6b3a4b6f0b0a4a1
+     * @example - /users/me/block/60f7a9b9e6b3a4b6f0b0a4a1
+     * @example - /users/me/unblock/60f7a9b9e6b3a4b6f0b0a4a1
      */
-    router.patch("/users/:action/:blockedUserId", AuthMiddleware.isAuthtenticated, UserControllers.updateUserBlockList);
+    router.patch(
+      "/users/me/:action/:blockedUserId",
+      AuthMiddleware.isAuthtenticated,
+      UserControllers.updateUserBlockList,
+    );
+
+    /**
+     * @method PATCH
+     * @param {string} path - /users/me/avatar
+     * @description - Update the current user's avatar
+     */
+    router.patch("/users/me/avatar", AuthMiddleware.isAuthtenticated, UserControllers.updateUserAvatar);
 
     return router;
   }

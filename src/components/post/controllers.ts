@@ -20,6 +20,7 @@ import { deleteImagesByTag, removeTagFromImages, uploadImage } from "@helpers/cl
 import _ from "lodash";
 import { IPostDocument, IPostRange } from "./interfaces";
 import { IUserDocument } from "@components/user/interfaces";
+import { ApiError } from "@utils/errors/api-error";
 
 export class PostControllers {
   @joiRequestValidator(postSchema)
@@ -69,11 +70,7 @@ export class PostControllers {
     });
 
     if (!response.public_id) {
-      return res.status(StatusCodes.BAD_REQUEST).json({
-        success: false,
-        message: "Image upload failed",
-        data: response,
-      });
+      throw new ApiError("ImageUploadError", StatusCodes.BAD_REQUEST);
     }
 
     return res.status(StatusCodes.OK).json({
@@ -99,11 +96,7 @@ export class PostControllers {
       });
     }
 
-    return res.status(StatusCodes.NOT_FOUND).json({
-      success: false,
-      message: "No images or tags found",
-      data: response,
-    });
+    throw new ApiError("NoImagesOrTagsFound", StatusCodes.NOT_FOUND);
   }
 
   static async deletePostDraftImagesByTag(req: Request, res: Response) {
@@ -116,11 +109,7 @@ export class PostControllers {
       });
     }
 
-    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-      success: false,
-      message: "Images deletion failed",
-      data: response,
-    });
+    throw new ApiError("DeleteImagesError", StatusCodes.INTERNAL_SERVER_ERROR);
   }
 
   static async getPosts(req: Request, res: Response): Promise<void> {
