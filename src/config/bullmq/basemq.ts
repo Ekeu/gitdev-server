@@ -12,6 +12,7 @@ import { IReactionJob } from "@components/reaction/interfaces";
 import { IVoteComment } from "@components/comment/interfaces";
 import { IFollowJob } from "@components/follow/interfaces";
 import { INotificationJob } from "@components/notification/interfaces";
+import { IChatDeleteMessageJob, IChatMessage, IChatReaction, IChatReadMessageJob } from "@components/chat/interfaces";
 
 type TJobData =
   | IAuthUserJob
@@ -21,7 +22,11 @@ type TJobData =
   | IReactionJob
   | IVoteComment
   | IFollowJob
-  | INotificationJob;
+  | INotificationJob
+  | IChatMessage
+  | IChatDeleteMessageJob
+  | IChatReadMessageJob
+  | IChatReaction;
 
 export abstract class BaseMQ {
   protected queue: Queue;

@@ -9,6 +9,7 @@ import { ReactionRoutes } from "@components/reaction/routes";
 import { CommentRoutes } from "@components/comment/routes";
 import { FollowRoutes } from "@components/follow/routes";
 import { NotificationRoutes } from "@components/notification/routes";
+import { ChatRoutes } from "@components/chat/routes";
 
 // Validate environment variables
 env.validateEnvs();
@@ -25,6 +26,7 @@ const app = new App(
     CommentRoutes.getRoutes(),
     FollowRoutes.getRoutes(),
     NotificationRoutes.getRoutes(),
+    ChatRoutes.getRoutes(),
   ],
   errorMiddlewares,
 );

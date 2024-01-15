@@ -12,6 +12,7 @@ import { updateUserBlockListSchema } from "./data/joi-schemes/user";
 import { uploadImage } from "@helpers/cloudinary";
 import { IOUser } from "./socket";
 import { UploadApiResponse } from "cloudinary";
+import { ApiError } from "@utils/errors/api-error";
 
 export class UserControllers {
   static async fetchUserProfile(req: Request, res: Response) {
@@ -84,11 +85,7 @@ export class UserControllers {
     }
 
     if (img && !(response as UploadApiResponse).public_id) {
-      return res.status(StatusCodes.BAD_REQUEST).json({
-        success: false,
-        message: "Image upload failed",
-        data: response,
-      });
+      throw new ApiError("ImageUploadError", StatusCodes.BAD_REQUEST);
     }
 
     const avatar = img ? (response as UploadApiResponse).secure_url : (response as string);

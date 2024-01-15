@@ -61,10 +61,13 @@ export class NotificationServices {
       relatedEntityType,
       relatedEntityId,
       ejsTemplatePath,
+      sendNotification,
       notificationLink,
     } = data;
 
     if (senderId === receiverId) return;
+
+    if (!sendNotification) return;
 
     await this.createNotification({
       message,

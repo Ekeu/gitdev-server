@@ -1,0 +1,9 @@
+export const GITDEV_CHAT_CACHE = "gitdev-chat-cache";
+export const GITDEV_CHAT_SAVE_MESSAGE_QUEUE = "chat-save-message-queue";
+export const GITDEV_CHAT_DELETE_MESSAGE_QUEUE = "chat-delete-message-queue";
+export const GITDEV_CHAT_READ_MESSAGE_QUEUE = "chat-read-message-queue";
+export const GITDEV_CHAT_REACTION_MESSAGE_QUEUE = "chat-reaction-message-queue";
+export const GITDEV_CHAT_SAVE_MESSAGE_JOB = "job-chat-save-message-mq";
+export const GITDEV_CHAT_DELETE_MESSAGE_JOB = "job-chat-delete-message-mq";
+export const GITDEV_CHAT_READ_MESSAGE_JOB = "job-chat-read-message-mq";
+export const GITDEV_CHAT_REACTION_MESSAGE_JOB = "job-chat-reaction-message-mq";
