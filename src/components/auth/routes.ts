@@ -63,6 +63,13 @@ export class AuthRoutes {
     router.post("/auth/forgot-password", AuthUserControllers.forgotPassword);
 
     /**
+     * @method PATCH
+     * @param {string} path - /auth/update-password
+     * @description - Update a user's password
+     */
+    router.patch("/auth/update-password", AuthMiddleware.isAuthtenticated, AuthUserControllers.updatePassword);
+
+    /**
      * @method POST
      * @param {string} path - /auth/reset-password/:resetToken
      * @description - Resets a user's password

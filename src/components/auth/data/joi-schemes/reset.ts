@@ -18,7 +18,7 @@ export const passwordSchema: ObjectSchema = Joi.object({
     "string.pattern.base":
       "Make sure it's at least 15 characters OR at least 8 characters including a number and a lowercase letter.",
   }),
-  confirmPassword: Joi.string().required().valid(Joi.ref("password")).messages({
+  confirmPassword: Joi.string().required().equal(Joi.ref("password")).messages({
     "string.base": "Invalid confirmation password.",
     "string.empty": "Please confirm your password.",
     "any.required": "Password confirmation is required.",

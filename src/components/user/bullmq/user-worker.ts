@@ -1,5 +1,13 @@
 import { Job } from "bullmq";
-import { IUserAvatarJob, IUserBlockListJob, IUserDocument, IUserJob, IUserJobResponse } from "../interfaces";
+import {
+  INotificationSettingsJob,
+  IUserAvatarJob,
+  IUserBasicInfoJob,
+  IUserBlockListJob,
+  IUserDocument,
+  IUserJob,
+  IUserJobResponse,
+} from "../interfaces";
 import { UserServices } from "../services";
 
 export class UserWorker {
@@ -18,5 +26,15 @@ export class UserWorker {
   static async updateAvatar(job: Job<IUserAvatarJob>): Promise<void> {
     const { userId, avatar } = job.data;
     await UserServices.updateAvatar(userId, avatar);
+  }
+
+  static async updateBasicInfo(job: Job<IUserBasicInfoJob>): Promise<void> {
+    const { userId, value } = job.data;
+    await UserServices.updateBasicInfo(userId, value);
+  }
+
+  static async updateNotificationSettings(job: Job<INotificationSettingsJob>): Promise<void> {
+    const { userId, value } = job.data;
+    await UserServices.updateNotificationSettings(userId, value);
   }
 }

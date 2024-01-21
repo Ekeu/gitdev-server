@@ -29,6 +29,12 @@ class Environment {
   public GITDEV_CLOUDINARY_API_SECRET: string;
   public GITDEV_DEV_SENDER_HOST: string;
   public GITDEV_DEV_SENDER_EMAIL: string;
+  public GITDEV_MONGO_PUBLIC_API_KEY: string;
+  public GITDEV_MONGO_PRIVATE_API_KEY: string;
+  public GITDEV_MONGO_PROJECT_ID: string;
+  public GITDEV_MONGO_API_BASE_URL: string;
+  public GITDEV_MONGO_CLUSTER_API_URL: string;
+  public GITDEV_MONGO_SEARCH_INDEX_API_URL: string;
   public GITDEV_DEV_SENDER_EMAIL_PASSWORD: string;
   public GITDEV_SENDGRID_API_KEY: string;
   public GITDEV_DEV_SENDER_HOST_PORT: number;
@@ -73,6 +79,12 @@ class Environment {
     this.GITDEV_REFRESH_JWT_SECRET_EXPIRES_IN = process.env.GITDEV_REFRESH_JWT_SECRET_EXPIRES_IN || "";
     this.GITDEV_RESET_PASSWORD_JWT_SECRET_EXPIRES_MINS =
       process.env.GITDEV_RESET_PASSWORD_JWT_SECRET_EXPIRES_MINS || "";
+    this.GITDEV_MONGO_PUBLIC_API_KEY = process.env.GITDEV_MONGO_PUBLIC_API_KEY || "";
+    this.GITDEV_MONGO_PRIVATE_API_KEY = process.env.GITDEV_MONGO_PRIVATE_API_KEY || "";
+    this.GITDEV_MONGO_PROJECT_ID = process.env.GITDEV_MONGO_PROJECT_ID || "";
+    this.GITDEV_MONGO_API_BASE_URL = process.env.GITDEV_MONGO_API_BASE_URL || "";
+    this.GITDEV_MONGO_CLUSTER_API_URL = `${process.env.GITDEV_MONGO_API_BASE_URL}/groups/${process.env.GITDEV_MONGO_PROJECT_ID}/clusters/${process.env.GITDEV_MONGO_CLUSTER}`;
+    this.GITDEV_MONGO_SEARCH_INDEX_API_URL = `${process.env.GITDEV_MONGO_API_BASE_URL}/groups/${process.env.GITDEV_MONGO_PROJECT_ID}/clusters/${process.env.GITDEV_MONGO_CLUSTER}/fts/indexes`;
     this.GITDEV_MONGO_URL = `mongodb+srv://${process.env.GITDEV_MONGO_USER}:${process.env.GITDEV_MONGO_PASSWORD}@${process.env.GITDEV_MONGO_CLUSTER}.ziu6aw8.mongodb.net/?retryWrites=true&w=majority`;
   }
 

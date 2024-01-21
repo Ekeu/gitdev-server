@@ -1,12 +1,14 @@
 import { ApiError } from "@utils/errors/api-error";
 import { StatusCodes } from "http-status-codes";
 import { generateFromEmail } from "unique-username-generator";
-import { IUserDocument, TUserBlockAction } from "./interfaces";
+import { INotification, IUserBasicInfo, IUserDocument, TUserBlockAction } from "./interfaces";
 import { User } from "./data/models/user";
 import { ObjectId, Types } from "mongoose";
 import { ISocialAuthGithubProfile, ISocialAuthGoogleProfile } from "@components/auth/interfaces";
 import { initAndSave } from "@components/auth/utils/common";
 import { removeSpacesFromUsername } from "@utils/common";
+import { Follow } from "@components/follow/data/models/follow";
+import { AuthUser } from "@components/auth/data/models/auth-user";
 
 export class UserServices {
   static async createUser(data: IUserDocument): Promise<IUserDocument> {
@@ -171,6 +173,145 @@ export class UserServices {
     } catch (error) {
       const err = error as Error;
       throw new ApiError(err.name, StatusCodes.BAD_REQUEST, err.message);
+    }
+  }
+
+  static async getUserSuggestions(userId: string, limit: number = 3): Promise<IUserDocument[]> {
+    try {
+      const _userId = new Types.ObjectId(userId);
+
+      const following = await Follow.find({ follower: _userId }).select("following");
+
+      const followingIds = following.map((follow) => follow.following);
+
+      const users = await User.aggregate([
+        { $match: { _id: { $ne: _userId, $nin: followingIds } } },
+        { $sample: { size: limit || 3 } },
+        {
+          $lookup: {
+            from: "authusers",
+            localField: "authUser",
+            foreignField: "_id",
+            as: "authUser",
+            pipeline: [
+              {
+                $project: {
+                  _id: 1,
+                  username: 1,
+                },
+              },
+            ],
+          },
+        },
+        { $unwind: "$authUser" },
+        {
+          $project: {
+            _id: 1,
+            avatar: 1,
+            authUser: 1,
+          },
+        },
+      ]);
+      return users;
+    } catch (error) {
+      throw new ApiError("MongoError", StatusCodes.BAD_REQUEST, (error as Error).message);
+    }
+  }
+
+  static async searchUsers(query: string): Promise<IUserDocument[]> {
+    try {
+      const users = await AuthUser.aggregate([
+        {
+          $search: {
+            index: "user_search",
+            text: {
+              query,
+              path: ["username"],
+              fuzzy: {},
+            },
+          },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "_id",
+            foreignField: "authUser",
+            as: "user",
+          },
+        },
+        { $unwind: "$user" },
+        {
+          $project: {
+            _id: 1,
+            score: { $meta: "searchScore" },
+            username: 1,
+            "user.avatar": 1,
+            "user._id": 1,
+          },
+        },
+      ])
+        .sort({ score: -1 })
+        .limit(10);
+      return users;
+    } catch (error) {
+      throw new ApiError("MongoError", StatusCodes.BAD_REQUEST, (error as Error).message);
+    }
+  }
+
+  static async searchAutoCompleteUsers(query: string): Promise<IUserDocument[]> {
+    try {
+      const users = await AuthUser.aggregate([
+        {
+          $search: {
+            index: "users-autocomplete",
+            autocomplete: {
+              query,
+              path: "username",
+              tokenOrder: "sequential",
+            },
+          },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "_id",
+            foreignField: "authUser",
+            as: "user",
+          },
+        },
+        { $unwind: "$user" },
+        {
+          $project: {
+            _id: 1,
+            username: 1,
+            "user.avatar": 1,
+            "user._id": 1,
+          },
+        },
+      ])
+        .sort({ score: -1 })
+        .limit(10);
+      return users;
+    } catch (error) {
+      throw new ApiError("MongoError", StatusCodes.BAD_REQUEST, (error as Error).message);
+    }
+  }
+
+  static async updateBasicInfo(userId: string, data: IUserBasicInfo) {
+    try {
+      const _userId = new Types.ObjectId(userId);
+      await User.updateOne({ _id: _userId }, data);
+    } catch (error) {
+      throw new ApiError("MongoError", StatusCodes.BAD_REQUEST, (error as Error).message);
+    }
+  }
+
+  static async updateNotificationSettings(userId: string, data: INotification) {
+    try {
+      const _userId = new Types.ObjectId(userId);
+      await User.updateOne({ _id: _userId }, { notifications: data });
+    } catch (error) {
+      throw new ApiError("MongoError", StatusCodes.BAD_REQUEST, (error as Error).message);
     }
   }
 }

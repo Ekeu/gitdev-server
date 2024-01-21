@@ -20,7 +20,6 @@ export interface IAuthUserDocument extends Document {
   username: string;
   emailVerified: boolean;
   _id: string | ObjectId;
-  hashPassword: (password: string) => Promise<string>;
   comparePassword: (password: string) => Promise<boolean>;
   password?: string;
 }

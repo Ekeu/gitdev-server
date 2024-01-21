@@ -34,8 +34,8 @@ const app = new App(
 // Initialize cloudinary
 app.initCloudinary();
 
-// Connect to database
-app.connectToDatabase();
+// Set up the database
+app.initDatabase();
 
 // Listen to the server
 app.listen();

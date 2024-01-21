@@ -8,10 +8,17 @@ export class UserRoutes {
 
     /**
      * @method GET
-     * @param {string} path - /users/me
-     * @description - Fetches the current user's profile
+     * @param {string} path - /users/:me
+     * @description - Fetches a user's profile
      */
-    router.get("/users/me", AuthMiddleware.isAuthtenticated, UserControllers.fetchUserProfile);
+    router.get("/users/:me", AuthMiddleware.isAuthtenticated, UserControllers.fetchUserProfile);
+
+    /**
+     * @method GET
+     * @param {string} path - /users/posts/:me/:redisId/:page
+     * @description - Fetches a user's posts
+     */
+    router.get("/users/posts/:me/:redisId/:page", AuthMiddleware.isAuthtenticated, UserControllers.fetchUserPosts);
 
     /**
      * @method PATCH
@@ -32,6 +39,54 @@ export class UserRoutes {
      * @description - Update the current user's avatar
      */
     router.patch("/users/me/avatar", AuthMiddleware.isAuthtenticated, UserControllers.updateUserAvatar);
+
+    /**
+     * @method GET
+     * @param {string} path - /users/me/suggestions
+     * @description - Fetches a user's suggestions
+     * @example - /users/me/suggestions?limit=3
+     */
+    router.get("/users/me/suggestions", AuthMiddleware.isAuthtenticated, UserControllers.fetchUserSuggestions);
+
+    /**
+     * @method GET
+     * @param {string} path - /users/me/search/autocomplete
+     * @description - Search for a user
+     * @example - /users/me/search/autocomplete?query=john
+     */
+    router.get(
+      "/users/me/search/autocomplete",
+      AuthMiddleware.isAuthtenticated,
+      UserControllers.searchAutoCompleteUsers,
+    );
+
+    /**
+     * @method GET
+     * @param {string} path - /users/me/search
+     * @description - Search for a user
+     * @example - /users/me/search?query=john
+     */
+    router.get("/users/me/search", AuthMiddleware.isAuthtenticated, UserControllers.searchUsers);
+
+    /**
+     * @method PATCH
+     * @param {string} path - /users/me/update
+     * @description - Update the current user's basic info
+     * @example - /users/me/update
+     */
+    router.patch("/users/me/update", AuthMiddleware.isAuthtenticated, UserControllers.updateUserBasicInfo);
+
+    /**
+     * @method PATCH
+     * @param {string} path - /users/me/notifications/settings
+     * @description - Update the current user's notification settings
+     * @example - /users/me/notifications/settings
+     */
+    router.patch(
+      "/users/me/notifications/settings",
+      AuthMiddleware.isAuthtenticated,
+      UserControllers.updateNotificationSettings,
+    );
 
     return router;
   }

@@ -70,10 +70,6 @@ authUserSchema.methods.comparePassword = async function (password: string): Prom
   return compare(password, hashedPassword);
 };
 
-authUserSchema.methods.hashPassword = async function (password: string): Promise<string> {
-  return hash(password, env.GITDEV_AUTH_SALT_ROUNDS);
-};
-
 const AuthUser = model<IAuthUserDocument>("AuthUser", authUserSchema);
 
 export { AuthUser };
