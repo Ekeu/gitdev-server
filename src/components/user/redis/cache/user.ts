@@ -59,7 +59,7 @@ export class UserCache extends RedisClient {
       if (!this.client.isOpen) {
         await this.client.connect();
       }
-      await this.client.HSET(`users:${key}`, field, JSON.stringify(value));
+      await this.client.HSET(`users:${key}`, field, value);
     } catch (error) {
       logger.error(`Error updating user field: ${(error as Error).message}`, error);
       throw new ApiError("RedisError");

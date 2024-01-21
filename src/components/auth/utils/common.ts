@@ -1,7 +1,7 @@
 import gravatar from "gravatar";
 
 import crypto from "crypto";
-import { IAuthUserDocument, ISignUp } from "../interfaces";
+import { IAuthUserDocument, IJWTPayload, ISignUp } from "../interfaces";
 import { IUserDocument } from "@components/user/interfaces";
 import { generateRandomNumericUUID } from "@utils/common";
 import { userCache } from "@components/user/redis/cache/user";
@@ -65,7 +65,7 @@ export const initAndSave = async (data: ISignUp): Promise<IAuthAndUser> => {
  * @description - generates a jwt payload used to create a jwt token
  */
 
-export const generateJwtPayload = (user: IUserDocument) => {
+export const generateJwtPayload = (user: IUserDocument): IJWTPayload => {
   return {
     role: (user.authUser as IAuthUserDocument).role,
     email: (user.authUser as IAuthUserDocument).email,

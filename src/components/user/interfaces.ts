@@ -48,6 +48,25 @@ export interface ISocial {
   url: string;
 }
 
+export interface IUserBasicInfo {
+  [key: string]: any;
+  website: string;
+  company: string;
+  location: string;
+  bio: string;
+  social: ISocial[];
+}
+
+export interface IUserBasicInfoJob {
+  userId: string;
+  value: IUserBasicInfo;
+}
+
+export interface INotificationSettingsJob {
+  userId: string;
+  value: INotification;
+}
+
 export interface IUserJob {
   value: string | IUserDocument;
 }

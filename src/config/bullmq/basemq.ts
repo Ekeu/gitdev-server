@@ -5,7 +5,7 @@ import { ExpressAdapter } from "@bull-board/express";
 import { logger } from "@config/logger";
 import { IAuthUserJob } from "@components/auth/interfaces";
 import { env } from "@/env";
-import { IUserJob } from "@components/user/interfaces";
+import { INotificationSettingsJob, IUserBasicInfoJob, IUserJob } from "@components/user/interfaces";
 import { IEmailJob } from "@components/mail/interfaces";
 import { IPostJob } from "@components/post/interfaces";
 import { IReactionJob } from "@components/reaction/interfaces";
@@ -26,7 +26,9 @@ type TJobData =
   | IChatMessage
   | IChatDeleteMessageJob
   | IChatReadMessageJob
-  | IChatReaction;
+  | IChatReaction
+  | IUserBasicInfoJob
+  | INotificationSettingsJob;
 
 export abstract class BaseMQ {
   protected queue: Queue;

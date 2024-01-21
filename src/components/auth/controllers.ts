@@ -24,14 +24,21 @@ import { accessTokenCookieConfig, refreshTokenCookieConfig } from "@config/cooki
 import { ApiError } from "@utils/errors/api-error";
 import { env } from "@/env";
 import { MailServices } from "@components/mail/services";
-import { emailForgotMQ } from "@components/mail/bullmq/mail-mq";
 import {
+  emailChangePasswordMQ,
+  emailForgotMQ,
+  emailResetPasswordMQ,
+  emailVerifyAccountMQ,
+} from "@components/mail/bullmq/mail-mq";
+import {
+  GITDEV_EMAIL_CHANGE_PASSWORD_JOB,
   GITDEV_EMAIL_FORGOT_PASSWORD_JOB,
   GITDEV_EMAIL_RESET_PASSWORD_JOB,
   GITDEV_EMAIL_VERIFY_ACCOUNT_JOB,
 } from "@components/mail/constants";
 import { emailSchema, passwordSchema, resetTokenSchema } from "./data/joi-schemes/reset";
 import { emailVerificationTokenSchema } from "./data/joi-schemes/verify";
+import { changePasswordSchema } from "./data/joi-schemes/change-password";
 
 export class AuthUserControllers {
   @joiRequestValidator(signupSchema)
@@ -186,9 +193,7 @@ export class AuthUserControllers {
   }
 
   static async signOut(req: Request, res: Response) {
-    const { authUser } = req.body;
-
-    const authUserToken = await AuthToken.findOne({ authUser });
+    const authUserToken = await AuthToken.findOne({ authUser: req.currentUser?.authUser });
 
     const cookies = req.cookies;
 
@@ -358,7 +363,7 @@ export class AuthUserControllers {
         location: clientIp ? `${geoip.lookup(clientIp)?.city} | ${geoip.lookup(clientIp)}` : "Unknown",
         device: `${ua.browser.name} on ${ua.os.name}`,
       });
-      emailForgotMQ.addJob(GITDEV_EMAIL_RESET_PASSWORD_JOB, {
+      emailResetPasswordMQ.addJob(GITDEV_EMAIL_RESET_PASSWORD_JOB, {
         value: {
           to: authUser.email,
           subject: "[GitDev] Your password was reset",
@@ -384,7 +389,7 @@ export class AuthUserControllers {
       username: req.currentUser!.username!,
       token: emailVerificationToken,
     });
-    emailForgotMQ.addJob(GITDEV_EMAIL_VERIFY_ACCOUNT_JOB, {
+    emailVerifyAccountMQ.addJob(GITDEV_EMAIL_VERIFY_ACCOUNT_JOB, {
       value: {
         to: req.currentUser!.email!,
         subject: "[GitDev] Let the journey begin! 🚀",
@@ -422,5 +427,50 @@ export class AuthUserControllers {
     await AuthUserServices.updateEmailVerified(req.currentUser!.authUser);
     await AuthToken.updateOne({ authUser: req.currentUser!.authUser }, { $unset: { emailSecret: 1 } });
     res.status(StatusCodes.OK).json({ success: true, message: "Email verified successfully." });
+  }
+
+  @joiRequestValidator(changePasswordSchema)
+  static async updatePassword(req: Request, res: Response) {
+    const { currentPassword, newPassword } = req.body;
+
+    const authUser = await AuthUserServices.findAuthUserById(req.currentUser!.authUser);
+
+    if (!authUser) {
+      throw new ApiError(
+        GITDEV_ERRORS.NOT_FOUND_OR_SIGNED_OUT.name,
+        StatusCodes.NOT_FOUND,
+        GITDEV_ERRORS.NOT_FOUND_OR_SIGNED_OUT.message,
+      );
+    }
+
+    const isMatch = await authUser.comparePassword(currentPassword);
+
+    if (!isMatch) {
+      throw new ApiError(GITDEV_ERRORS.UNAUTHORIZED.name, StatusCodes.UNAUTHORIZED, GITDEV_ERRORS.UNAUTHORIZED.message);
+    }
+
+    authUser.password = newPassword;
+
+    await authUser.save();
+
+    const clientIp = reqIP.getClientIp(req);
+    const ua = parser(req.headers["user-agent"]);
+    const ejsFile = path.join(__dirname, "..", "..", "config", "mail", "templates", "reset.ejs");
+    const ejsTemplate = await MailServices.getEJSTemplate(ejsFile, {
+      username: authUser.username,
+      date: DateTime.now().toLocaleString(DateTime.DATETIME_SHORT),
+      ip: clientIp,
+      location: clientIp ? `${geoip.lookup(clientIp)?.city} | ${geoip.lookup(clientIp)}` : "Unknown",
+      device: `${ua.browser.name} on ${ua.os.name}`,
+    });
+    emailChangePasswordMQ.addJob(GITDEV_EMAIL_CHANGE_PASSWORD_JOB, {
+      value: {
+        to: authUser.email,
+        subject: "[GitDev] Your password was updated",
+        html: ejsTemplate,
+      },
+    });
+
+    await AuthUserControllers.signOut(req, res);
   }
 }

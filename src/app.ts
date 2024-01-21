@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import "express-async-errors";
 import { StatusCodes } from "http-status-codes";
 import { logger } from "@config/logger";
-import { connectToDB } from "@config/db";
+import { connectToDB, createAutoCompleteIndex, createSearchIndex } from "@config/db";
 import { Server } from "http";
 import { createSocketIOServer, socketIOConnections } from "@config/socket";
 import { initCloudinary } from "@config/cloudinary";
@@ -68,11 +68,13 @@ export class App {
   }
 
   /**
-   * @description - Creates a connection to a MongoDB database
+   * @description - Connect and initialize the database
    */
 
-  public async connectToDatabase(): Promise<void> {
+  public async initDatabase(): Promise<void> {
     await connectToDB();
+    await createSearchIndex("authusers", "users-search");
+    await createAutoCompleteIndex("authusers", "users-autocomplete");
     mongoose.connection.on("disconnected", () => {
       logger.fatal("MongoDB disconnected");
     });

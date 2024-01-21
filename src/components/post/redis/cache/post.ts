@@ -34,7 +34,7 @@ export class PostCache extends RedisClient {
     }
   }
 
-  async get(range: IPostRange, options?: IZRangeOptions): Promise<IPostDocument[]> {
+  async getAll(range: IPostRange, options?: IZRangeOptions): Promise<IPostDocument[]> {
     try {
       if (!this.client.isOpen) {
         await this.client.connect();
@@ -72,7 +72,7 @@ export class PostCache extends RedisClient {
     }
   }
 
-  async getOne(key: string): Promise<IPostDocument | null> {
+  async get(key: string): Promise<IPostDocument | null> {
     try {
       if (!this.client.isOpen) {
         await this.client.connect();

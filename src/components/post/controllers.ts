@@ -126,7 +126,7 @@ export class PostControllers {
     let posts: IPostDocument[] = [];
     let total: number = 0;
 
-    const cachedPosts = await postCache.get(range);
+    const cachedPosts = await postCache.getAll(range);
 
     if (cachedPosts?.length) {
       posts = cachedPosts;
@@ -191,7 +191,7 @@ export class PostControllers {
 
     let post: IPostDocument | null = null;
 
-    post = await postCache.getOne(postId);
+    post = await postCache.get(postId);
 
     if (!post) {
       post = await PostServices.findPostById(postId);

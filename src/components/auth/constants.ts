@@ -17,6 +17,10 @@ export const GITDEV_ERRORS = {
     message:
       "The provided email is already associated with an account. If you forgot your password, please use the reset password option.",
   },
+  PASSWORDS_DO_NOT_MATCH: {
+    name: "PasswordsDoNotMatch",
+    message: "Passwords do not match",
+  },
   AVATAR_IMAGE_UPLOAD: {
     name: "ImageUploadError",
     message: "Error uploading avatar image",
@@ -53,6 +57,10 @@ export const GITDEV_ERRORS = {
   UNAUTHENTICATED: {
     name: "UnauthenticatedAccess",
     message: "Access denied. You must be logged in to view this resource.",
+  },
+  UNAUTHORIZED: {
+    name: "UnauthorizedAccess",
+    message: "Access denied. You do not have permission to access this resource.",
   },
   JWT_FAILED_OR_USER_NOT_FOUND: {
     name: "AuthenticationFailed",
